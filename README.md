@@ -180,35 +180,13 @@ Detailed remote/push steps are in [docs/GITHUB_SETUP.md](docs/GITHUB_SETUP.md).
 ## Latest forecast
 
 <!-- PREDICTION_TABLE_START -->
-### Latest forecast: Bahrain (Round 4)
-_Updated: 2026-04-07 17:12:04_
-
-| Pos | Driver | Team | Win% | Podium% | Top 5% | DNF% |
-|-----|--------|------|------|----------|--------|------|
-| 1 | **ANT** | Mercedes | 11.5% | 19.9% | 77.3% | 5.7% |
-| 2 | **RUS** | Mercedes | 8.9% | 23.5% | 60.1% | 5.9% |
-| 3 | **PIA** | McLaren | 8.3% | 25.8% | 52.2% | 10.2% |
-| 4 | **VER** | Red Bull | 8.1% | 24.0% | 14.6% | 10.9% |
-| 5 | **NOR** | McLaren | 7.7% | 23.2% | 45.0% | 10.4% |
-| 6 | **LEC** | Ferrari | 7.2% | 23.5% | 49.0% | 5.2% |
-| 7 | **HAM** | Ferrari | 5.5% | 18.7% | 35.0% | 6.1% |
-| 8 | **GAS** | Alpine | 3.6% | 11.8% | 25.4% | 14.4% |
-| 9 | **HAD** | Red Bull | 3.5% | 11.9% | 22.5% | 11.2% |
-| 10 | **PER** | Cadillac | 3.1% | 10.1% | 5.3% | 17.2% |
-
-Full dashboard: [dashboard/f1_2026_portfolio_dashboard.html](dashboard/f1_2026_portfolio_dashboard.html)
+_Run `python predict.py --race <RaceName> --year 2026 --round <Round>` to refresh this section._
 <!-- PREDICTION_TABLE_END -->
 
 ## Validation summary
 
 <!-- ACCURACY_TABLE_START -->
-### Validation benchmark
-
-| Model | Win accuracy | Spearman rho | MAE positions | Races |
-|-------|--------------|--------------|---------------|-------|
-| Ensemble | 44.6% | 0.627 | 3.57 | 92 |
-| Qualifying baseline | 55.4% | 0.613 | 3.53 | 92 |
-| Season-points baseline | 50.0% | 0.598 | 3.79 | 92 |
+_Run `python scripts/model_diagnostics.py --eval-years 2022 2023 2024 2025 --mc-sims 300` to refresh this section._
 <!-- ACCURACY_TABLE_END -->
 
 ## Known gaps
@@ -218,7 +196,3 @@ The current repo is public-ready, but the model still has three known technical 
 - circuit DNA naming mismatch in historical joins
 - weak wet-race signal in saved feature artifacts
 - constructor priors that should become more season-aware in historical training rows
-
-## License
-
-This repository is released under the MIT License. See [LICENSE](LICENSE).
