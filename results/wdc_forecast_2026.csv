@@ -1,0 +1,23 @@
+Driver,Team,CurrentPoints,WDC_Prob,ExpectedFinalPoints,P10_Points,P90_Points
+RUS,Mercedes,63.0,0.7942,475.7,437.0,514.0
+ANT,Mercedes,72.0,0.2058,435.6,397.0,473.0
+LEC,Ferrari,49.0,0.0,324.2,287.0,360.0
+HAM,Ferrari,41.0,0.0,291.8,257.0,326.0
+NOR,McLaren,25.0,0.0,183.0,150.0,216.0
+PIA,McLaren,21.0,0.0,179.1,147.0,212.0
+VER,Red Bull,12.0,0.0,168.0,134.0,203.0
+BEA,Haas,17.0,0.0,59.0,40.0,80.0
+GAS,Alpine,15.0,0.0,43.6,28.0,61.0
+PER,Cadillac,0.0,0.0,42.5,22.0,64.0
+SAI,Williams,2.0,0.0,38.1,20.0,57.0
+LAW,Racing Bulls,10.0,0.0,33.7,20.0,50.0
+HAD,Red Bull,4.0,0.0,32.0,16.0,49.0
+OCO,Haas,1.0,0.0,24.5,11.0,40.0
+LIN,Racing Bulls,4.0,0.0,24.3,11.0,39.0
+ALO,Aston Martin,0.0,0.0,24.2,10.0,41.0
+ALB,Williams,0.0,0.0,15.6,4.0,28.0
+HUL,Audi,0.0,0.0,14.8,4.0,28.0
+BOT,Cadillac,0.0,0.0,14.4,3.0,27.0
+STR,Aston Martin,0.0,0.0,13.2,3.0,25.0
+BOR,Audi,2.0,0.0,12.7,4.0,23.0
+COL,Alpine,1.0,0.0,10.0,2.0,19.0

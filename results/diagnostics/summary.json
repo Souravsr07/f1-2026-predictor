@@ -1,0 +1,68 @@
+{
+  "baseline_comparison": [
+    {
+      "podium_overlap_mean": 1.8152,
+      "podium_overlap_std": 0.6277,
+      "podium_overlap_pct_mean": 0.6052,
+      "podium_overlap_pct_std": 0.2094,
+      "spearman_rho_mean": 0.6271,
+      "spearman_rho_std": 0.182,
+      "spearman_pval_mean": 0.0407,
+      "spearman_pval_std": 0.1235,
+      "mae_positions_mean": 3.5713,
+      "mae_positions_std": 0.9135,
+      "brier_win_mean": 0.0418,
+      "brier_win_std": 0.0034,
+      "brier_podium_mean": 0.1051,
+      "brier_podium_std": 0.0081,
+      "win_accuracy": 0.446,
+      "Model": "ensemble",
+      "Races": 92
+    },
+    {
+      "podium_overlap_mean": 1.913,
+      "podium_overlap_std": 0.7796,
+      "podium_overlap_pct_mean": 0.6378,
+      "podium_overlap_pct_std": 0.26,
+      "spearman_rho_mean": 0.6129,
+      "spearman_rho_std": 0.2521,
+      "spearman_pval_mean": 0.0618,
+      "spearman_pval_std": 0.1781,
+      "mae_positions_mean": 3.5322,
+      "mae_positions_std": 1.3045,
+      "win_accuracy": 0.554,
+      "Model": "quali_baseline",
+      "Races": 92
+    },
+    {
+      "podium_overlap_mean": 1.75,
+      "podium_overlap_std": 0.7206,
+      "podium_overlap_pct_mean": 0.5834,
+      "podium_overlap_pct_std": 0.2403,
+      "spearman_rho_mean": 0.5979,
+      "spearman_rho_std": 0.184,
+      "spearman_pval_mean": 0.0479,
+      "spearman_pval_std": 0.1154,
+      "mae_positions_mean": 3.7862,
+      "mae_positions_std": 0.9338,
+      "win_accuracy": 0.5,
+      "Model": "season_points_baseline",
+      "Races": 92
+    }
+  ],
+  "files_written": [
+    "baseline_comparison.csv",
+    "baseline_comparison.png",
+    "calibration.png",
+    "calibration_podium.csv",
+    "calibration_win.csv",
+    "circuit_breakdown.csv",
+    "live_accuracy_tracker.csv",
+    "sample_prediction.csv",
+    "sanity_report.csv",
+    "summary.json",
+    "team_residuals.csv",
+    "walk_forward_race_metrics.csv",
+    "walk_forward_year_metrics.csv"
+  ]
+}

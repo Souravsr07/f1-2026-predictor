@@ -1,0 +1,78 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+
+# Packaging / build
+build/
+dist/
+.eggs/
+*.egg
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Secrets / local env files
+.env
+.env.*
+!.env.example
+secrets.json
+
+# Local caches
+cache/
+.matplotlib/
+*.sqlite
+*.ff1pkl
+
+# Raw data
+data/raw/
+data fetching/fetched_data/
+
+# Optional bulky FastF1 processed artifacts
+data/processed/fastf1_*.parquet
+data/processed/*.csv
+
+# Generated public artifacts: keep the latest lightweight outputs only
+results/**
+!results/
+!results/latest_race_prediction.csv
+!results/latest_race_prediction_meta.json
+!results/wdc_forecast_2026.csv
+!results/wcc_forecast_2026.csv
+!results/driver_standings_2026.csv
+!results/constructor_standings_2026.csv
+!results/accuracy_log.csv
+!results/diagnostics/
+results/diagnostics/**
+!results/diagnostics/summary.json
+
+# Archived HTML / prediction snapshots are kept locally, not versioned
+dashboard/history/
+results/predictions/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# Logs / temp
+*.log
+*.tmp
