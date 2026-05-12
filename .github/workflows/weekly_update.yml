@@ -51,6 +51,7 @@ jobs:
           mkdir -p data/processed
           mkdir -p results/diagnostics
           mkdir -p results/predictions
+          mkdir -p results/eda
           mkdir -p dashboard/history
 
       - name: Fetch latest race data
@@ -66,6 +67,9 @@ jobs:
       - name: Retrain model
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force_retrain == 'true' }}
         run: python predict.py --fit
+
+      - name: Generate dashboard EDA inputs
+        run: python scripts/run_eda.py
 
       - name: Generate race outputs
         run: python scripts/generate_outputs.py
