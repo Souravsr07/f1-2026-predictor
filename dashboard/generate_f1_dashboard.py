@@ -121,6 +121,13 @@ def latest_dashboard_path(source_root: Path) -> Path:
     return source_root / "dashboard" / "f1_2026_portfolio_dashboard.html"
 
 
+def repo_relative_path(path: Path, source_root: Path) -> str:
+    try:
+        return path.resolve().relative_to(source_root.resolve()).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
 def dashboard_history_dir(source_root: Path) -> Path:
     return source_root / "dashboard" / "history"
 
@@ -170,8 +177,8 @@ def save_latest_prediction_artifacts(
         "year": int(year),
         "race_number": int(race_number) if race_number is not None else None,
         "generated_at": generated_at,
-        "latest_csv": str(latest_csv),
-        "archive_csv": str(archive_csv),
+        "latest_csv": repo_relative_path(latest_csv, resolved_root),
+        "archive_csv": repo_relative_path(archive_csv, resolved_root),
     }
     latest_meta.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     return {
@@ -218,6 +225,31 @@ def load_config_module(source_root: Path):
     return module
 
 
+def ensure_eda_inputs(source_root: Path) -> None:
+    eda_dir = source_root / "results" / "eda"
+    required = [
+        eda_dir / "feature_target_correlation.csv",
+        eda_dir / "live_2026_team_shift.csv",
+    ]
+    if all(path.exists() for path in required):
+        return
+
+    run_eda_path = source_root / "scripts" / "run_eda.py"
+    spec = importlib.util.spec_from_file_location("f1_dashboard_run_eda", run_eda_path)
+    if spec is None or spec.loader is None:
+        missing = ", ".join(str(path) for path in required if not path.exists())
+        raise FileNotFoundError(f"Missing EDA inputs and cannot load {run_eda_path}: {missing}")
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.main()
+
+    still_missing = [path for path in required if not path.exists()]
+    if still_missing:
+        missing = ", ".join(str(path) for path in still_missing)
+        raise FileNotFoundError(f"EDA generation completed but required dashboard inputs are missing: {missing}")
+
+
 def render_form_tokens(last3: str) -> str:
     tokens = []
     for token in last3.split():
@@ -242,7 +274,7 @@ def render_wdc_rows(wdc: pd.DataFrame) -> str:
         width = min(100.0, float(row["ExpectedFinalPoints"]) / max_points * 100)
         rows.append(
             f"""
-            <div class="prob-row">
+            <div class="prob-row" style="--team-color:{team_color(row['Team'])}">
               <div class="prob-head">
                 <div>
                   <div class="driver-line">
@@ -295,7 +327,7 @@ def render_constructor_rows(constructors: pd.DataFrame) -> str:
         width = float(row["Points"]) / leader_points * 100
         rows.append(
             f"""
-            <div class="team-row">
+            <div class="team-row" style="--team-color:{team_color(row['Team'])}">
               <div class="team-row-head">
                 <div class="team-row-name">
                   <span class="rank-chip">{int(row['Position'])}</span>
@@ -323,7 +355,7 @@ def render_shift_rows(team_shift: pd.DataFrame) -> str:
             sign = "+" if row["PointsShift"] >= 0 else ""
             rows.append(
                 f"""
-                <div class="shift-row">
+                <div class="shift-row" style="--shift-color:{accent};--team-color:{team_color(row['Team'])}">
                   <div class="team-row-head">
                     <div class="team-row-name">
                       <span class="team-swatch" style="background:{team_color(row['Team'])}"></span>
@@ -345,7 +377,7 @@ def render_prediction_cards(sample: pd.DataFrame) -> str:
     for _, row in sample.head(10).iterrows():
         cards.append(
             f"""
-            <article class="forecast-card">
+            <article class="forecast-card" style="--team-color:{team_color(row['Team'])}">
               <div class="forecast-topline">
                 <span class="forecast-rank">P{int(row['PredictedPos'])}</span>
                 <span class="forecast-ci">Win CI {fmt_pct(row['WinProb_CI_low'])} to {fmt_pct(row['WinProb_CI_high'])}</span>
@@ -458,6 +490,7 @@ def load_snapshot(source_root: Path) -> dict:
     results_dir = source_root / "results"
     diagnostics_dir = results_dir / "diagnostics"
     eda_dir = results_dir / "eda"
+    ensure_eda_inputs(source_root)
 
     wdc = pd.read_csv(results_dir / "wdc_forecast_2026.csv")
     wcc = pd.read_csv(results_dir / "wcc_forecast_2026.csv")
@@ -577,36 +610,69 @@ def render_html(snapshot: dict) -> str:
     quali = metrics["quali_baseline"]
     season = metrics["season_points_baseline"]
     weights = snapshot["ensemble_weights"]
+    driver_standings = snapshot["driver_standings"]
+    constructors = snapshot["constructors"]
+    wdc_sorted = snapshot["wdc"].sort_values("WDC_Prob", ascending=False).reset_index(drop=True)
+
+    standings_runner_up = driver_standings.iloc[1] if len(driver_standings) > 1 else points_leader
+    title_chaser = wdc_sorted.iloc[1] if len(wdc_sorted) > 1 else title_favorite
+    constructor_runner_up = constructors.iloc[1] if len(constructors) > 1 else constructor_leader
+    live_gap = max(0.0, float(points_leader["TotalPoints"] - standings_runner_up["TotalPoints"]))
+    title_margin = max(0.0, float(title_favorite["WDC_Prob"] - title_chaser["WDC_Prob"]))
+
+    if points_leader["DriverFull"] != title_favorite["DriverFull"]:
+        operating_takeaway = (
+            f"{html.escape(points_leader['DriverFull'])} leads the live table by {fmt_num(live_gap)} points over "
+            f"{html.escape(standings_runner_up['DriverFull'])}, but the simulator still prefers "
+            f"{html.escape(title_favorite['DriverFull'])} over the full season horizon."
+        )
+    else:
+        operating_takeaway = (
+            f"{html.escape(points_leader['DriverFull'])} is both the live leader and the probabilistic favourite, "
+            "which suggests the current order is already hardening rather than being driven by one noisy weekend."
+        )
+
+    constructor_note = (
+        f"{html.escape(constructor_leader['Team'])} is {fmt_num(snapshot['wcc_gap'])} points clear of "
+        f"{html.escape(constructor_runner_up['Team'])} and already owns "
+        f"{fmt_pct(snapshot['wcc_favorite']['WCC_Prob'])} of the WCC book."
+    )
+    race_note = (
+        f"{html.escape(top_prediction['DriverFull'])} is the single most likely winner for "
+        f"{html.escape(snapshot['forecast_race_name'])}, but the front of the grid is still compressed with no "
+        f"driver above {fmt_pct(top_prediction['WinProb'])} win odds."
+    )
 
     css = """
     :root{
-      --bg:#050915;
-      --panel:#0d1525;
-      --panel2:#131d33;
-      --panel3:#17243f;
-      --text:#eef3f8;
-      --muted:#8f9db0;
-      --line:rgba(255,255,255,0.08);
-      --line2:rgba(255,255,255,0.16);
-      --accent:#ff6b35;
-      --cyan:#28c7fa;
-      --amber:#ffd166;
-      --green:#59f8b2;
-      --red:#ff667a;
-      --display:'Bebas Neue',sans-serif;
-      --body:'Space Grotesk',sans-serif;
-      --mono:'IBM Plex Mono',monospace;
+      --bg:#f3eee4;
+      --paper:#fbf8f2;
+      --paper-2:#efe7d8;
+      --ink:#161a21;
+      --muted:#6f7480;
+      --line:rgba(22,26,33,0.10);
+      --line-strong:rgba(22,26,33,0.18);
+      --accent:#d72638;
+      --accent-2:#1f57d2;
+      --amber:#bb7f14;
+      --green:#17815f;
+      --red:#c14953;
+      --coal:#121721;
+      --coal-2:#1b2230;
+      --display:'Teko',sans-serif;
+      --body:'Manrope',sans-serif;
+      --mono:'JetBrains Mono',monospace;
+      --shadow:0 26px 60px rgba(42,32,20,0.10);
     }
     *{box-sizing:border-box;margin:0;padding:0}
     html{scroll-behavior:smooth}
     body{
       font-family:var(--body);
-      color:var(--text);
+      color:var(--ink);
       background:
-        radial-gradient(circle at 15% 15%, rgba(40,199,250,0.10), transparent 28%),
-        radial-gradient(circle at 82% 12%, rgba(255,107,53,0.12), transparent 30%),
-        radial-gradient(circle at 60% 100%, rgba(89,248,178,0.08), transparent 35%),
-        linear-gradient(180deg,#050915 0%,#091121 50%,#050915 100%);
+        radial-gradient(circle at 16% 10%, rgba(215,38,56,0.10), transparent 24%),
+        radial-gradient(circle at 84% 16%, rgba(31,87,210,0.10), transparent 26%),
+        linear-gradient(180deg,#f8f4ec 0%,#f3eee4 54%,#efe7d8 100%);
       line-height:1.5;
     }
     body::before{
@@ -614,93 +680,326 @@ def render_html(snapshot: dict) -> str:
       position:fixed;
       inset:0;
       pointer-events:none;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-      background-size:36px 36px;
-      mask-image:linear-gradient(180deg, rgba(0,0,0,0.5), transparent 90%);
+      background:
+        repeating-linear-gradient(135deg, rgba(22,26,33,0.015) 0 1px, transparent 1px 14px),
+        linear-gradient(180deg, rgba(255,255,255,0.30), rgba(255,255,255,0));
+      opacity:.75;
     }
     a{color:inherit}
-    .wrap{width:min(1360px,calc(100% - 48px));margin:0 auto}
-    .hero{padding:64px 0 44px;border-bottom:1px solid var(--line)}
-    .hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:end}
-    .eyebrow,.slabel,.subsection-label,.metric-label,.table-meta,.range-note,.chip,.footer-note,th{font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;font-size:11px}
-    .eyebrow{color:var(--cyan);margin-bottom:18px}
-    .hero-title{font-family:var(--display);font-size:clamp(66px,10vw,118px);line-height:.88;letter-spacing:.03em;margin-bottom:22px}
-    .hero-title span{color:var(--accent)}
-    .hero-copy{max-width:760px;color:var(--muted);font-size:15px;line-height:1.9;margin-bottom:26px}
+    .wrap{width:min(1380px,calc(100% - 48px));margin:0 auto}
+    .page-shell{position:relative;z-index:1}
+    .eyebrow,.slabel,.subsection-label,.metric-label,.table-meta,.range-note,.chip,.footer-note,th,.section-note,.telemetry-label{font-family:var(--mono);letter-spacing:.11em;text-transform:uppercase;font-size:11px}
+    .masthead{padding:40px 0 28px}
+    .mast-grid{display:grid;grid-template-columns:1.18fr .82fr;gap:22px;align-items:stretch}
+    .hero-card,.telemetry-card,.kpi,.board,.callout-panel{border:1px solid var(--line);box-shadow:var(--shadow)}
+    .hero-card{
+      position:relative;
+      background:linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.52));
+      border-radius:30px;
+      padding:34px 36px 30px;
+      overflow:hidden;
+    }
+    .hero-card::before{
+      content:"";
+      position:absolute;
+      inset:0 auto auto 0;
+      width:100%;
+      height:10px;
+      background:linear-gradient(90deg,var(--accent) 0%, var(--accent) 36%, transparent 36%, transparent 42%, var(--accent-2) 42%, var(--accent-2) 62%, transparent 62%);
+    }
+    .hero-card::after{
+      content:"";
+      position:absolute;
+      right:-38px;
+      bottom:-40px;
+      width:220px;
+      height:220px;
+      border:22px solid rgba(31,87,210,0.08);
+      border-radius:50%;
+    }
+    .eyebrow{color:var(--accent);margin-bottom:16px}
+    .hero-kicker{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:7px 12px;
+      border-radius:999px;
+      background:rgba(215,38,56,0.08);
+      color:var(--accent);
+      font-family:var(--mono);
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      font-size:11px;
+      margin-bottom:16px;
+    }
+    .hero-title{
+      font-family:var(--display);
+      font-size:clamp(82px,10.5vw,148px);
+      line-height:.78;
+      letter-spacing:.03em;
+      margin-bottom:18px;
+    }
+    .hero-copy{
+      max-width:760px;
+      color:#454c58;
+      font-size:15px;
+      line-height:1.9;
+      margin-bottom:24px;
+    }
     .chip-row{display:flex;flex-wrap:wrap;gap:10px}
-    .chip{border:1px solid var(--line2);border-radius:999px;padding:8px 12px;color:var(--muted);background:rgba(255,255,255,0.03)}
-    .chip.hot{color:var(--accent);border-color:rgba(255,107,53,0.35);background:rgba(255,107,53,0.08)}
-    .chip.cool{color:var(--cyan);border-color:rgba(40,199,250,0.35);background:rgba(40,199,250,0.08)}
-    .chip.good{color:var(--green);border-color:rgba(89,248,178,0.35);background:rgba(89,248,178,0.08)}
-    .hero-panel{background:linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));border:1px solid var(--line);border-radius:24px;padding:24px;backdrop-filter:blur(12px);box-shadow:0 20px 50px rgba(0,0,0,0.22)}
-    .hero-panel h3{font-family:var(--display);font-size:40px;letter-spacing:.04em;line-height:.95;margin:10px 0 18px}
-    .hero-stat{padding:14px 0;border-top:1px solid var(--line)}
-    .hero-stat strong{display:block;font-size:22px;font-weight:700}
-    .hero-panel p{font-size:13px;color:var(--muted);line-height:1.8;margin-top:16px}
-    .kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);margin:0 auto}
-    .kpi{background:rgba(7,12,24,0.82);padding:28px 24px}
-    .kpi-value{font-family:var(--display);font-size:52px;line-height:.95;letter-spacing:.03em;margin-bottom:6px}
-    .kpi-copy{font-size:12px;color:var(--muted);margin-top:4px}
-    .section{padding:34px 0;border-top:1px solid var(--line)}
-    .grid-2,.grid-3{display:grid;gap:18px}
-    .grid-2{grid-template-columns:1.05fr .95fr}
-    .grid-3{grid-template-columns:1fr 1fr 1fr}
-    .card{background:linear-gradient(180deg, rgba(19,29,51,0.72), rgba(11,18,32,0.76));border:1px solid var(--line);border-radius:24px;padding:28px;box-shadow:0 22px 50px rgba(0,0,0,0.18);overflow:hidden}
-    .slabel{color:var(--muted);display:flex;gap:12px;align-items:center;margin-bottom:16px}
-    .slabel::after{content:"";height:1px;flex:1;background:var(--line)}
-    .ctitle{font-family:var(--display);font-size:38px;line-height:.92;letter-spacing:.04em;margin-bottom:12px}
+    .chip{
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:9px 12px;
+      color:#5d6370;
+      background:rgba(255,255,255,0.54);
+    }
+    .chip.hot{color:var(--accent);border-color:rgba(215,38,56,0.22);background:rgba(215,38,56,0.08)}
+    .chip.cool{color:var(--accent-2);border-color:rgba(31,87,210,0.18);background:rgba(31,87,210,0.08)}
+    .chip.good{color:var(--green);border-color:rgba(23,129,95,0.18);background:rgba(23,129,95,0.08)}
+    .telemetry-card{
+      background:linear-gradient(180deg,var(--coal) 0%, var(--coal-2) 100%);
+      color:#f2f5f8;
+      border-radius:30px;
+      padding:28px;
+      position:relative;
+      overflow:hidden;
+    }
+    .telemetry-card::before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height:8px;
+      background:linear-gradient(90deg,var(--accent),var(--accent-2));
+    }
+    .telemetry-label{color:#8ea4ff;margin-bottom:14px}
+    .telemetry-card h2{
+      font-family:var(--display);
+      font-size:54px;
+      line-height:.82;
+      letter-spacing:.04em;
+      margin-bottom:18px;
+    }
+    .telemetry-note{font-size:13px;line-height:1.85;color:#bcc6d7;margin-top:18px}
+    .telemetry-stat{padding:14px 0;border-top:1px solid rgba(255,255,255,0.10)}
+    .telemetry-stat strong{display:block;font-size:24px;line-height:1.3;margin-top:4px}
+    .metric-band{padding:8px 0 0}
+    .kpi-rack{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .kpi{
+      background:rgba(255,255,255,0.62);
+      backdrop-filter:blur(8px);
+      border-radius:24px;
+      padding:22px 22px 20px;
+      position:relative;
+      overflow:hidden;
+    }
+    .kpi::before{
+      content:"";
+      position:absolute;
+      inset:0 auto auto 0;
+      width:100%;
+      height:5px;
+      background:linear-gradient(90deg,var(--accent), transparent 75%);
+    }
+    .kpi:nth-child(2)::before{background:linear-gradient(90deg,var(--accent-2), transparent 75%)}
+    .kpi:nth-child(3)::before{background:linear-gradient(90deg,var(--green), transparent 75%)}
+    .kpi:nth-child(4)::before{background:linear-gradient(90deg,var(--amber), transparent 75%)}
+    .kpi-value{font-family:var(--display);font-size:56px;line-height:.84;letter-spacing:.03em;margin-bottom:4px}
+    .kpi-copy{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.7}
+    .callout-wrap{padding:18px 0 6px}
+    .callout-panel{
+      background:linear-gradient(90deg, rgba(22,26,33,0.98) 0%, rgba(35,43,58,0.96) 100%);
+      color:#f4f7fb;
+      border-radius:24px;
+      padding:18px 22px;
+      display:grid;
+      grid-template-columns:.32fr 1fr;
+      gap:18px;
+      align-items:center;
+    }
+    .callout-label{
+      font-family:var(--mono);
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      font-size:11px;
+      color:#8ea4ff;
+    }
+    .callout-copy{font-size:15px;line-height:1.8;color:#d6dce7}
+    .section{padding:28px 0}
+    .main-grid,.split-grid,.analysis-grid,.story-grid{display:grid;gap:18px}
+    .main-grid{grid-template-columns:1.08fr .92fr}
+    .split-grid{grid-template-columns:.95fr 1.05fr}
+    .analysis-grid{grid-template-columns:1fr 1fr 1fr}
+    .board{
+      position:relative;
+      background:rgba(255,255,255,0.62);
+      backdrop-filter:blur(8px);
+      border-radius:28px;
+      padding:28px;
+      overflow:hidden;
+    }
+    .board::before{
+      content:"";
+      position:absolute;
+      inset:0 auto auto 0;
+      width:100%;
+      height:6px;
+      background:linear-gradient(90deg,var(--accent), transparent 72%);
+    }
+    .board-table::before{background:linear-gradient(90deg,var(--accent-2), transparent 72%)}
+    .board-secondary::before{background:linear-gradient(90deg,var(--green), transparent 72%)}
+    .board-alert::before{background:linear-gradient(90deg,var(--amber), transparent 72%)}
+    .board-dark{
+      background:linear-gradient(180deg,#151b26 0%, #1d2430 100%);
+      color:#eef3f8;
+      border-color:rgba(0,0,0,0);
+    }
+    .board-dark::before{background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+    .board-dark .copy,.board-dark .range-note,.board-dark .metric-label,.board-dark .subsection-label{color:#bcc6d7}
+    .board-dark .slabel{color:#f0f4fa}
+    .slabel{display:flex;align-items:center;gap:10px;color:var(--accent);margin-bottom:14px}
+    .slabel::before{content:"";width:10px;height:10px;border-radius:50%;background:currentColor}
+    .ctitle{font-family:var(--display);font-size:50px;line-height:.82;letter-spacing:.04em;margin-bottom:10px}
     .copy{font-size:13px;color:var(--muted);line-height:1.85}
-    .divider{height:1px;background:var(--line);margin:22px 0}
-    .prob-row,.feature-row,.watch-item,.shift-row{margin-bottom:16px}
+    .divider{height:1px;background:var(--line);margin:20px 0}
+    .board-dark .divider{background:rgba(255,255,255,0.10)}
+    .prob-row,.feature-row,.watch-item,.shift-row,.team-row{margin-bottom:16px}
+    .prob-row:last-child,.feature-row:last-child,.watch-item:last-child,.shift-row:last-child,.team-row:last-child{margin-bottom:0}
+    .prob-row{
+      position:relative;
+      padding:14px 16px 14px 18px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:rgba(255,255,255,0.52);
+    }
+    .prob-row::before{
+      content:"";
+      position:absolute;
+      inset:14px auto 14px 0;
+      width:4px;
+      border-radius:0 999px 999px 0;
+      background:var(--team-color, var(--accent));
+    }
     .prob-head,.feature-head,.team-row-head,.forecast-topline,.mini-bar-row{display:flex;justify-content:space-between;gap:14px;align-items:center}
     .driver-line,.team-row-name,.forecast-name,.driver-cell{display:flex;align-items:center;gap:10px}
     .driver-cell{gap:12px}
-    .driver-name{font-size:15px;font-weight:700}
+    .driver-name{font-size:15px;font-weight:800}
     .prob-meta{font-size:12px;color:var(--muted);margin-top:4px}
-    .prob-value{font-family:var(--display);font-size:34px;color:var(--accent);white-space:nowrap}
-    .prob-bar{height:8px;border-radius:999px;background:rgba(255,255,255,0.06);overflow:hidden;margin:10px 0 6px}
+    .prob-value{font-family:var(--display);font-size:40px;color:var(--team-color, var(--accent));white-space:nowrap;line-height:.85}
+    .prob-bar{height:8px;border-radius:999px;background:rgba(22,26,33,0.07);overflow:hidden;margin:10px 0 6px}
     .prob-bar.slim{height:6px;margin:8px 0 0}
     .prob-bar span{display:block;height:100%;border-radius:999px}
-    .team-swatch{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 4px rgba(255,255,255,0.03)}
-    .rank-chip{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,0.06);color:var(--muted);font-family:var(--mono);font-size:10px}
+    .team-swatch{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 4px rgba(22,26,33,0.04)}
+    .rank-chip{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(22,26,33,0.06);color:var(--muted);font-family:var(--mono);font-size:10px}
     table{width:100%;border-collapse:collapse}
-    th,td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:left}
+    th,td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left}
     th{color:var(--muted)}
     td{font-size:13px;vertical-align:middle}
     td:nth-child(1),td:nth-child(3),td:nth-child(4),td:nth-child(5),td:nth-child(6){text-align:right}
     td:nth-child(7){min-width:118px}
+    tr:hover td{background:rgba(255,255,255,0.52)}
+    .table-wrap{overflow:auto}
     .form-pill{display:inline-flex;align-items:center;justify-content:center;width:30px;height:24px;border-radius:8px;font-family:var(--mono);font-size:10px;margin-right:6px}
-    .form-pill.good{background:rgba(89,248,178,0.14);color:var(--green)}
-    .form-pill.mid{background:rgba(255,209,102,0.14);color:var(--amber)}
-    .form-pill.bad{background:rgba(255,102,122,0.14);color:var(--red)}
-    .callout{background:linear-gradient(180deg, rgba(255,107,53,0.10), rgba(255,107,53,0.04));border-color:rgba(255,107,53,0.18)}
-    .forecast-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:22px}
-    .forecast-card{background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:20px;padding:18px}
-    .forecast-rank{font-family:var(--display);font-size:26px;letter-spacing:.04em;color:var(--cyan)}
-    .forecast-ci{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em}
+    .form-pill.good{background:rgba(23,129,95,0.12);color:var(--green)}
+    .form-pill.mid{background:rgba(187,127,20,0.12);color:var(--amber)}
+    .form-pill.bad{background:rgba(193,73,83,0.12);color:var(--red)}
+    .section-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:18px}
+    .section-note{color:var(--muted);max-width:420px;line-height:1.8}
+    .forecast-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+    .forecast-card{
+      position:relative;
+      background:rgba(255,255,255,0.66);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:18px;
+      overflow:hidden;
+    }
+    .forecast-card::before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height:4px;
+      background:var(--team-color, var(--accent));
+    }
+    .forecast-rank{font-family:var(--display);font-size:34px;letter-spacing:.04em;color:var(--team-color, var(--accent));line-height:.88}
+    .forecast-ci{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;text-align:right}
     .forecast-metrics,.model-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0 16px}
-    .metric-value{font-family:var(--display);font-size:28px;line-height:.95;letter-spacing:.03em}
+    .metric-value{font-family:var(--display);font-size:34px;line-height:.86;letter-spacing:.03em}
     .mini-bar-group{display:grid;gap:10px}
     .mini-bar-row span:first-child{font-size:11px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em}
     .mini-bar-row .prob-bar{flex:1;margin:0 0 0 12px}
-    .subsection-label{color:var(--cyan);margin-bottom:10px}
-    .model-card{background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:18px;padding:18px}
-    .model-card.highlight{border-color:rgba(89,248,178,0.25);background:linear-gradient(180deg, rgba(89,248,178,0.08), rgba(255,255,255,0.03))}
+    .subsection-label{color:var(--accent-2);margin-bottom:10px}
+    .team-row,.shift-row{
+      padding:12px 14px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:rgba(255,255,255,0.48);
+    }
+    .team-row-value{font-weight:700}
+    .shift-row .team-row-value{color:var(--shift-color, var(--accent))}
+    .feature-head span:first-child{font-weight:700}
+    .model-card{
+      background:rgba(255,255,255,0.48);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px;
+      margin-bottom:14px;
+    }
+    .model-card:last-child{margin-bottom:0}
+    .model-card.highlight{
+      border-color:rgba(23,129,95,0.22);
+      background:linear-gradient(180deg, rgba(23,129,95,0.10), rgba(255,255,255,0.48));
+    }
     .watch-item p{font-size:13px;color:var(--muted);line-height:1.8}
-    .story{background:linear-gradient(180deg, rgba(11,18,32,0.96), rgba(7,12,24,0.96));border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:52px 0;margin-top:8px}
-    .story-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:start}
-    .story-copy p{color:var(--muted);font-size:14px;line-height:1.9;margin-bottom:16px}
-    .story-copy strong{color:var(--text)}
-    .method-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
-    .method-card{background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:18px;padding:18px}
-    .method-card p{font-size:13px;color:var(--muted);line-height:1.8}
-    .footer{padding:30px 0 44px}
+    .memo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:20px}
+    .memo-tile{
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:18px;
+      padding:16px;
+    }
+    .memo-value{font-family:var(--display);font-size:42px;line-height:.86;letter-spacing:.03em;margin:8px 0 6px}
+    .memo-tile p{font-size:12px;color:#c0cada;line-height:1.8}
+    .story-band{
+      background:linear-gradient(135deg,#151b26 0%, #1c2431 58%, #10151e 100%);
+      border-top:1px solid rgba(0,0,0,0.05);
+      border-bottom:1px solid rgba(0,0,0,0.05);
+      padding:46px 0;
+      margin-top:8px;
+    }
+    .story-grid{grid-template-columns:1.12fr .88fr;align-items:start}
+    .story-copy{padding-right:8px}
+    .story-copy p{color:#c0cada;font-size:14px;line-height:1.9;margin-bottom:16px}
+    .story-copy strong{color:#f2f5f8}
+    .slabel-invert{color:#8ea4ff}
+    .story-title{font-family:var(--display);font-size:58px;line-height:.82;letter-spacing:.04em;color:#f4f7fb;margin-bottom:16px}
+    .method-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .method-card{
+      background:rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:18px;
+      padding:18px;
+    }
+    .method-card p{font-size:13px;color:#c0cada;line-height:1.8}
+    .footer{padding:28px 0 42px}
     .footer-grid{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
-    .footer-grid strong{font-family:var(--display);font-size:22px;color:var(--text);letter-spacing:.03em}
-    @media (max-width:1200px){.hero-grid,.grid-2,.grid-3,.story-grid,.forecast-grid{grid-template-columns:1fr 1fr}.forecast-grid{grid-template-columns:repeat(3,1fr)}}
-    @media (max-width:860px){.wrap{width:min(100% - 28px,1360px)}.hero-grid,.grid-2,.grid-3,.story-grid,.forecast-grid,.kpi-strip,.method-grid{grid-template-columns:1fr}.hero-title{font-size:58px}.forecast-grid{grid-template-columns:1fr}table{display:block;overflow:auto}}
+    .footer-grid strong{font-family:var(--display);font-size:28px;color:var(--ink);letter-spacing:.03em}
+    .footer-right{text-align:right}
+    @media (max-width:1240px){
+      .mast-grid,.main-grid,.split-grid,.analysis-grid,.story-grid{grid-template-columns:1fr}
+      .forecast-grid{grid-template-columns:repeat(3,1fr)}
+      .callout-panel{grid-template-columns:1fr}
+      .memo-grid{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width:900px){
+      .wrap{width:min(100% - 28px,1380px)}
+      .kpi-rack,.forecast-grid,.method-grid,.memo-grid{grid-template-columns:1fr}
+      .section-head{flex-direction:column;align-items:flex-start}
+      .hero-title{font-size:72px}
+      .telemetry-card h2,.ctitle,.story-title{font-size:48px}
+      table{display:block;overflow:auto}
+      .footer-right{text-align:left}
+    }
     """
 
     methodology_cards = [
@@ -739,197 +1038,228 @@ def render_html(snapshot: dict) -> str:
   <title>F1 Predictor | 2026 Portfolio Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <style>{css}</style>
 </head>
 <body>
-  <header class="hero">
-    <div class="wrap">
-      <div class="hero-grid">
+  <div class="page-shell">
+    <header class="masthead">
+      <div class="wrap">
+        <div class="mast-grid">
+          <section class="hero-card">
+            <div class="eyebrow">Executive race briefing | Formula 1 2026 | Snapshot {fmt_date(snapshot['generated_at'])}</div>
+            <div class="hero-kicker">Pit Wall Dossier</div>
+            <h1 class="hero-title">CHAMPIONSHIP<br/>CONTROL ROOM</h1>
+            <p class="hero-copy">A consulting-grade motorsport briefing designed for portfolio presentation: live championship table, probabilistic title map, and race-week scenario board in one sheet. The forecasting stack blends grouped XGBoost ranking, Bradley-Terry driver strength, constructor state, and Monte Carlo simulation so the page reads like an operating review rather than a fan-only scoreboard.</p>
+            <div class="chip-row">
+              <span class="chip hot">{snapshot['completed_rounds']} rounds complete | next race {html.escape(snapshot['next_race_name'])}</span>
+              <span class="chip cool">{snapshot['training_rows']:,} driver-race rows | {snapshot['feature_columns']} model columns</span>
+              <span class="chip good">{snapshot['monte_carlo_sims']:,} Monte Carlo season sims</span>
+              <span class="chip">{MODEL_LABELS['ensemble']} leads on race-order quality</span>
+              <span class="chip">Live leader {html.escape(points_leader['DriverFull'])} | forecast leader {html.escape(title_favorite['DriverFull'])}</span>
+            </div>
+          </section>
+          <aside class="telemetry-card">
+            <div class="telemetry-label">Trackside note</div>
+            <h2>THE TABLE IS A LAGGING INDICATOR</h2>
+            <div class="telemetry-stat">
+              <div class="metric-label">Current points leader</div>
+              <strong>{html.escape(points_leader['DriverFull'])} | {fmt_num(points_leader['TotalPoints'])} pts</strong>
+            </div>
+            <div class="telemetry-stat">
+              <div class="metric-label">Forecast title favourite</div>
+              <strong>{html.escape(title_favorite['DriverFull'])} | {fmt_pct(title_favorite['WDC_Prob'])} WDC probability</strong>
+            </div>
+            <div class="telemetry-stat">
+              <div class="metric-label">Constructor control</div>
+              <strong>{html.escape(constructor_leader['Team'])} | {fmt_pct(snapshot['wcc_favorite']['WCC_Prob'])} WCC probability</strong>
+            </div>
+            <p class="telemetry-note">{operating_takeaway}</p>
+          </aside>
+        </div>
+      </div>
+    </header>
+
+    <section class="metric-band">
+      <div class="wrap kpi-rack">
+        <article class="kpi">
+          <div class="kpi-value" style="color:var(--accent)">{fmt_pct(title_favorite['WDC_Prob'])}</div>
+          <div class="metric-label">{html.escape(title_favorite['DriverFull'])} title probability</div>
+          <div class="kpi-copy">{fmt_pct(title_margin)} probability edge over {html.escape(title_chaser['DriverFull'])}</div>
+        </article>
+        <article class="kpi">
+          <div class="kpi-value" style="color:var(--accent-2)">{ensemble['spearman_rho_mean']:.3f}</div>
+          <div class="metric-label">Walk-forward rank quality</div>
+          <div class="kpi-copy">{int(ensemble['Races'])} historical races scored with no future leakage</div>
+        </article>
+        <article class="kpi">
+          <div class="kpi-value" style="color:var(--green)">{fmt_pct(snapshot['wcc_favorite']['WCC_Prob'])}</div>
+          <div class="metric-label">{html.escape(snapshot['wcc_favorite']['Team'])} WCC probability</div>
+          <div class="kpi-copy">{fmt_num(snapshot['wcc_gap'])} point margin over {html.escape(constructor_runner_up['Team'])}</div>
+        </article>
+        <article class="kpi">
+          <div class="kpi-value" style="color:var(--amber)">{fmt_pct(top_prediction['WinProb'])}</div>
+          <div class="metric-label">{html.escape(top_prediction['DriverFull'])} race-win chance</div>
+          <div class="kpi-copy">{html.escape(snapshot['forecast_race_name'])} forecast remains wide open at the front</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="callout-wrap">
+      <div class="wrap">
+        <div class="callout-panel">
+          <div class="callout-label">Management summary</div>
+          <div class="callout-copy">{operating_takeaway} {constructor_note}</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap main-grid">
+        <article class="board">
+          <div class="slabel">Title map</div>
+          <div class="ctitle">WDC PROBABILITY LADDER</div>
+          <p class="copy">Expected final points determine bar length; title probability sits on the right. That keeps the visual useful for leadership audiences even when the championship compresses into a small number of viable contenders.</p>
+          <div class="divider"></div>
+          {render_wdc_rows(snapshot['wdc'])}
+        </article>
+
+        <article class="board board-table">
+          <div class="slabel">Live order</div>
+          <div class="ctitle">DRIVER STANDINGS</div>
+          <p class="copy">Current 2026 points through round {snapshot['completed_rounds']}, including sprint scoring. Last-three finish tokens keep momentum visible without drowning the page in lap-level detail.</p>
+          <div class="divider"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Driver</th>
+                  <th>Pts</th>
+                  <th>Wins</th>
+                  <th>Podiums</th>
+                  <th>Avg</th>
+                  <th>Last 3</th>
+                </tr>
+              </thead>
+              <tbody>{render_driver_table(driver_standings)}</tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap split-grid">
+        <article class="board board-secondary">
+          <div class="slabel">Team control</div>
+          <div class="ctitle">CONSTRUCTOR ORDER</div>
+          <p class="copy">Current constructor points through round {snapshot['completed_rounds']}. The table is shown alongside pace-reset movement so you can separate present scoring from adaptation speed under the new regulations.</p>
+          <div class="divider"></div>
+          {render_constructor_rows(constructors)}
+          <div class="divider"></div>
+          <div class="subsection-label">Reset winners and losers</div>
+          <div class="range-note">Points delta per race versus the 2025 baseline</div>
+          <div style="margin-top:14px">{render_shift_rows(snapshot['team_shift'])}</div>
+        </article>
+
+        <article class="board board-dark">
+          <div class="slabel">Decision memo</div>
+          <div class="ctitle">WHERE THE MODEL EARNS TRUST</div>
+          <p class="copy">This page is built to be useful in a consulting conversation: not just who is ahead, but what is stable, what is volatile, and where the data story is intentionally separated from the current headline standings.</p>
+          <div class="memo-grid">
+            <div class="memo-tile">
+              <div class="subsection-label">Standings tension</div>
+              <div class="memo-value">{fmt_num(live_gap)}</div>
+              <p>Points between {html.escape(points_leader['DriverFull'])} and {html.escape(standings_runner_up['DriverFull'])}. The live table is close enough that a few weekends can still reshape the conversation.</p>
+            </div>
+            <div class="memo-tile">
+              <div class="subsection-label">Constructor margin</div>
+              <div class="memo-value">{fmt_pct(snapshot['wcc_favorite']['WCC_Prob'])}</div>
+              <p>{constructor_note}</p>
+            </div>
+            <div class="memo-tile">
+              <div class="subsection-label">Race-week volatility</div>
+              <div class="memo-value">{fmt_pct(top_prediction['WinProb'])}</div>
+              <p>{race_note}</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <div class="slabel">Race week board</div>
+            <div class="ctitle">{html.escape(snapshot['forecast_race_name'].upper())} SCENARIO BOARD</div>
+          </div>
+          <div class="section-note">Top projected finishers from the latest archived prediction. Each tile combines predicted finishing slot with win, podium, top-five and DNF probabilities, so pace and reliability are visible together.</div>
+        </div>
+        <div class="forecast-grid">{render_prediction_cards(snapshot['sample'])}</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap analysis-grid">
+        <article class="board">
+          <div class="slabel">Signal audit</div>
+          <div class="ctitle">WHAT MOVES THE ORDER</div>
+          <p class="copy">Absolute correlation with finish position from the saved feature matrix. These are structural signals visible in the current artifacts, not claims of direct causality.</p>
+          <div class="divider"></div>
+          {render_feature_rows(snapshot['feature_corr'])}
+        </article>
+
+        <article class="board">
+          <div class="slabel">Validation</div>
+          <div class="ctitle">HONEST BACKTEST</div>
+          <p class="copy">Walk-forward only: train on the past and score the future. The ensemble leads on ranking quality, while the qualifying baseline still steals some cleaner single-winner calls.</p>
+          <div class="divider"></div>
+          {render_validation_cards(snapshot['metrics'])}
+        </article>
+
+        <article class="board board-alert">
+          <div class="slabel">Known gaps</div>
+          <div class="ctitle">MODEL WATCHLIST</div>
+          <p class="copy">The page is intentionally transparent about what still needs fixing. That transparency matters when this is shown to operators, recruiters, or leadership teams instead of staying in a notebook.</p>
+          <div class="divider"></div>
+          {render_watchlist_items()}
+        </article>
+      </div>
+    </section>
+
+    <section class="story-band">
+      <div class="wrap story-grid">
+        <div class="story-copy">
+          <div class="slabel slabel-invert">Method note</div>
+          <div class="story-title">WHY THIS LOOKS LIKE A RACE BRIEFING, NOT A SCOREBOARD</div>
+          <p><strong>Standings are descriptive.</strong> Forecasts are decision tools. That is why this page deliberately puts the live table next to the WDC probability ladder instead of pretending current points are the same thing as future control.</p>
+          <p><strong>The ranking model is the anchor.</strong> Grouped XGBoost learns the relative order inside each grand prix, Bradley-Terry adds head-to-head driver signal, and Monte Carlo converts point estimates into title odds, confidence bands, and scenario ranges.</p>
+          <p><strong>Validation stays honest.</strong> Walk-forward evaluation prevents future leakage, and the watchlist remains visible so the dashboard feels executive-grade and technically self-aware at the same time.</p>
+        </div>
+        <div class="method-grid">{methodology_html}</div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="wrap footer-grid">
         <div>
-          <div class="eyebrow">Portfolio ML System | Formula 1 2026 | Snapshot {fmt_date(snapshot['generated_at'])}</div>
-          <h1 class="hero-title">FORMULA 1<br/><span>FORECAST ENGINE</span></h1>
-          <p class="hero-copy">A consulting-grade racing intelligence dashboard built on top of an ensemble predictor: grouped XGBoost ranking, Bradley-Terry driver strength, championship state, and Monte Carlo uncertainty layered into one executive-facing view. The objective is not just to call winners, but to explain how car order, driver form, and season volatility are shifting under the 2026 reset.</p>
-          <div class="chip-row">
-            <span class="chip hot">{snapshot['completed_rounds']} rounds complete | next race {html.escape(snapshot['next_race_name'])}</span>
-            <span class="chip cool">{snapshot['training_rows']:,} driver-race rows | {snapshot['feature_columns']} model columns</span>
-            <span class="chip good">{snapshot['monte_carlo_sims']:,} Monte Carlo season sims</span>
-            <span class="chip">{MODEL_LABELS['ensemble']} beats baselines on rank quality</span>
-            <span class="chip">Current leader {html.escape(points_leader['DriverFull'])} | model favourite {html.escape(title_favorite['DriverFull'])}</span>
-          </div>
+          <strong>PIT WALL DOSSIER</strong><br/>
+          Data stack: Jolpica + FastF1 + live 2026 parquet layer<br/>
+          Forecast stack: XGBoost ranking + Bradley-Terry + Monte Carlo blend<br/>
+          Snapshot generated {fmt_date(snapshot['generated_at'])}
         </div>
-        <aside class="hero-panel">
-          <div class="subsection-label">Why this matters</div>
-          <h3>STANDINGS AND FORECASTS ARE NOT THE SAME THING</h3>
-          <div class="hero-stat">
-            <div class="metric-label">Points leader after round {snapshot['completed_rounds']}</div>
-            <strong>{html.escape(points_leader['DriverFull'])} | {fmt_num(points_leader['TotalPoints'])} pts</strong>
-          </div>
-          <div class="hero-stat">
-            <div class="metric-label">Model favourite for the title</div>
-            <strong>{html.escape(title_favorite['DriverFull'])} | {fmt_pct(title_favorite['WDC_Prob'])} WDC probability</strong>
-          </div>
-          <div class="hero-stat">
-            <div class="metric-label">Constructor control</div>
-            <strong>{html.escape(constructor_leader['Team'])} | {fmt_pct(snapshot['wcc_favorite']['WCC_Prob'])} WCC probability</strong>
-          </div>
-          <p>The dashboard is designed for upper-management audiences: not just who is ahead, but where the operating picture is changing, where the model is trustworthy, and where the current system still needs improvement.</p>
-        </aside>
-      </div>
-    </div>
-  </header>
-
-  <section class="kpi-strip wrap">
-    <div class="kpi">
-      <div class="kpi-value" style="color:var(--accent)">{fmt_pct(title_favorite['WDC_Prob'])}</div>
-      <div class="metric-label">George Russell title probability</div>
-      <div class="kpi-copy">Forecast favourite even though Antonelli leads the live table</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-value" style="color:var(--cyan)">{ensemble['spearman_rho_mean']:.3f}</div>
-      <div class="metric-label">Mean race-order Spearman</div>
-      <div class="kpi-copy">Walk-forward validation across {int(ensemble['Races'])} historical races</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-value" style="color:var(--green)">{fmt_pct(snapshot['wcc_favorite']['WCC_Prob'])}</div>
-      <div class="metric-label">Mercedes WCC probability</div>
-      <div class="kpi-copy">{fmt_num(constructor_leader['Points'])} points and +{fmt_num(snapshot['wcc_gap'])} over Ferrari</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-value" style="color:var(--amber)">{fmt_pct(top_prediction['WinProb'])}</div>
-      <div class="metric-label">{html.escape(top_prediction['DriverFull'])} {html.escape(snapshot['forecast_race_name'])} win chance</div>
-      <div class="kpi-copy">No driver above 12% win odds in the current diagnostic race-week snapshot</div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="wrap grid-2">
-      <article class="card">
-        <div class="slabel">Championship market</div>
-        <div class="ctitle">WDC OUTLOOK</div>
-        <p class="copy">Expected final points anchor the bar length; title probability sits on the right. That keeps the visual useful even when the forecast collapses into a two-driver fight.</p>
-        <div class="divider"></div>
-        {render_wdc_rows(snapshot['wdc'])}
-      </article>
-
-      <article class="card">
-        <div class="slabel">Live driver table</div>
-        <div class="ctitle">DRIVER STANDINGS</div>
-        <p class="copy">Current 2026 points through round {snapshot['completed_rounds']}, including sprint points. Last-three finish tokens make momentum legible without burying the audience in raw lap data.</p>
-        <div class="divider"></div>
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Driver</th>
-              <th>Pts</th>
-              <th>Wins</th>
-              <th>Podiums</th>
-              <th>Avg</th>
-              <th>Last 3</th>
-            </tr>
-          </thead>
-          <tbody>
-            {render_driver_table(snapshot['driver_standings'])}
-          </tbody>
-        </table>
-      </article>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="wrap grid-2">
-      <article class="card">
-        <div class="slabel">Constructor race</div>
-        <div class="ctitle">WCC CONTROL ROOM</div>
-        <p class="copy">Mercedes already owns the strategic position of the season: {fmt_num(constructor_leader['Points'])} points after three rounds, a +{fmt_num(snapshot['wcc_gap'])} gap to Ferrari, and a current forecast that assigns the team the entire WCC probability mass.</p>
-        <div class="divider"></div>
-        {render_constructor_rows(snapshot['constructors'])}
-      </article>
-
-      <article class="card callout">
-        <div class="slabel">2026 regime shift</div>
-        <div class="ctitle">CAR ORDER RESET</div>
-        <p class="copy">The clearest storyline in the live data is not incremental improvement, but a rapid repricing of team strength under the new regulations. These deltas compare average race points in 2026 against each team's 2025 baseline.</p>
-        <div class="divider"></div>
-        {render_shift_rows(snapshot['team_shift'])}
-      </article>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="wrap">
-      <article class="card">
-        <div class="slabel">Diagnostic race-week snapshot</div>
-        <div class="ctitle">{html.escape(snapshot['forecast_race_name']).upper()} FORECAST</div>
-        <p class="copy">This section turns the model into a presentable race brief: predicted order, uncertainty bounds, podium odds, top-five rates, and failure risk. It is deliberately probability-first, not just a ranked list.</p>
-        <div class="forecast-grid">
-          {render_prediction_cards(snapshot['sample'])}
-        </div>
-      </article>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="wrap grid-3">
-      <article class="card">
-        <div class="slabel">Signal density</div>
-        <div class="ctitle">STRONGEST FEATURE SIGNALS</div>
-        <p class="copy">These are the highest absolute correlations against finishing position in the saved feature audit. They are not causal proof or model importance, but they do show where the structure is currently strongest.</p>
-        <div class="divider"></div>
-        {render_feature_rows(snapshot['feature_corr'])}
-      </article>
-
-      <article class="card">
-        <div class="slabel">Validation discipline</div>
-        <div class="ctitle">HONEST PERFORMANCE</div>
-        <p class="copy">Walk-forward validation keeps the model under the same information constraint it faces in production. The current picture is nuanced: the ensemble is best on ranking structure, but the qualifying baseline still wins the simpler winner-pick contest.</p>
-        <div class="divider"></div>
-        {render_validation_cards(metrics)}
-      </article>
-
-      <article class="card">
-        <div class="slabel">Model watchlist</div>
-        <div class="ctitle">KNOWN GAPS</div>
-        <p class="copy">Portfolio-grade analytics should show where the system is strong and where it still has technical debt. These are the three most important issues surfaced during the repo audit.</p>
-        <div class="divider"></div>
-        {render_watchlist_items()}
-      </article>
-    </div>
-  </section>
-
-  <section class="story">
-    <div class="wrap story-grid">
-      <div class="story-copy">
-        <div class="slabel">Executive narrative</div>
-        <div class="ctitle">HOW TO READ THIS SYSTEM</div>
-        <p><strong>{html.escape(points_leader['DriverFull'])}</strong> leading the points while <strong>{html.escape(title_favorite['DriverFull'])}</strong> owns the title probability is the exact kind of divergence this project is built to surface. A boardroom audience usually sees only the table; the analytics layer shows what is likely to persist, what is noise, and where current state still understates future control.</p>
-        <p><strong>Mercedes</strong> is the early 2026 operating story. The team is up <strong>{snapshot['team_shift'].iloc[0]['PointsShift']:.1f} points per race</strong> versus its 2025 baseline, leads the live constructors table by <strong>{fmt_num(snapshot['wcc_gap'])} points</strong>, and owns a forecasted WCC lock. At the same time, the next-race snapshot shows unusually dispersed winner probabilities, which is exactly why uncertainty needs to be presented explicitly.</p>
-        <p>The validation result is also intentionally honest. The <strong>ensemble stack</strong> is stronger than the simple baselines on full-order ranking quality at <strong>{ensemble['spearman_rho_mean']:.3f}</strong> mean Spearman, but it is still behind the qualifying baseline on outright winner hit rate at <strong>{fmt_pct(ensemble['win_accuracy'])}</strong> versus <strong>{fmt_pct(quali['win_accuracy'])}</strong>. That honesty makes the portfolio stronger, not weaker.</p>
-      </div>
-      <div>
-        <div class="slabel">Method stack</div>
-        <div class="ctitle">ARCHITECTURE</div>
-        <div class="method-grid">
-          {methodology_html}
+        <div class="footer-right">
+          <div class="footer-note">Portfolio design choices</div>
+          Differentiate live standings from forward probabilities<br/>
+          Show executive narrative and technical rigor on one page<br/>
+          Keep validation leakage-free and visually legible<br/>
+          Surface model gaps instead of hiding them
         </div>
       </div>
-    </div>
-  </section>
-
-  <footer class="footer">
-    <div class="wrap footer-grid">
-      <div>
-        <strong>F1 PREDICTOR | PORTFOLIO DASHBOARD</strong><br/>
-        Generated {fmt_date(snapshot['generated_at'])} from live project artifacts<br/>
-        Historical span {snapshot['train_year_start']} to {snapshot['train_year_end']} | {snapshot['training_rows']:,} training rows
-      </div>
-      <div class="footer-note">
-        Ensemble weights | XGBoost {weights.get('xgboost', 0):.0%} | Bradley-Terry {weights.get('bradley_terry', 0):.0%} | Monte Carlo {weights.get('monte_carlo', 0):.0%}<br/>
-        Walk-forward races | {int(ensemble['Races'])} | Winner accuracy {fmt_pct(ensemble['win_accuracy'])} | Mean MAE {season['mae_positions_mean']:.2f} to {quali['mae_positions_mean']:.2f} across benchmarks
-      </div>
-    </div>
-  </footer>
+    </footer>
+  </div>
 </body>
 </html>
 """

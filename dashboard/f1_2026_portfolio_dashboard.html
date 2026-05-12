@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -6,36 +6,37 @@
   <title>F1 Predictor | 2026 Portfolio Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
     :root{
-      --bg:#050915;
-      --panel:#0d1525;
-      --panel2:#131d33;
-      --panel3:#17243f;
-      --text:#eef3f8;
-      --muted:#8f9db0;
-      --line:rgba(255,255,255,0.08);
-      --line2:rgba(255,255,255,0.16);
-      --accent:#ff6b35;
-      --cyan:#28c7fa;
-      --amber:#ffd166;
-      --green:#59f8b2;
-      --red:#ff667a;
-      --display:'Bebas Neue',sans-serif;
-      --body:'Space Grotesk',sans-serif;
-      --mono:'IBM Plex Mono',monospace;
+      --bg:#f3eee4;
+      --paper:#fbf8f2;
+      --paper-2:#efe7d8;
+      --ink:#161a21;
+      --muted:#6f7480;
+      --line:rgba(22,26,33,0.10);
+      --line-strong:rgba(22,26,33,0.18);
+      --accent:#d72638;
+      --accent-2:#1f57d2;
+      --amber:#bb7f14;
+      --green:#17815f;
+      --red:#c14953;
+      --coal:#121721;
+      --coal-2:#1b2230;
+      --display:'Teko',sans-serif;
+      --body:'Manrope',sans-serif;
+      --mono:'JetBrains Mono',monospace;
+      --shadow:0 26px 60px rgba(42,32,20,0.10);
     }
     *{box-sizing:border-box;margin:0;padding:0}
     html{scroll-behavior:smooth}
     body{
       font-family:var(--body);
-      color:var(--text);
+      color:var(--ink);
       background:
-        radial-gradient(circle at 15% 15%, rgba(40,199,250,0.10), transparent 28%),
-        radial-gradient(circle at 82% 12%, rgba(255,107,53,0.12), transparent 30%),
-        radial-gradient(circle at 60% 100%, rgba(89,248,178,0.08), transparent 35%),
-        linear-gradient(180deg,#050915 0%,#091121 50%,#050915 100%);
+        radial-gradient(circle at 16% 10%, rgba(215,38,56,0.10), transparent 24%),
+        radial-gradient(circle at 84% 16%, rgba(31,87,210,0.10), transparent 26%),
+        linear-gradient(180deg,#f8f4ec 0%,#f3eee4 54%,#efe7d8 100%);
       line-height:1.5;
     }
     body::before{
@@ -43,164 +44,410 @@
       position:fixed;
       inset:0;
       pointer-events:none;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-      background-size:36px 36px;
-      mask-image:linear-gradient(180deg, rgba(0,0,0,0.5), transparent 90%);
+      background:
+        repeating-linear-gradient(135deg, rgba(22,26,33,0.015) 0 1px, transparent 1px 14px),
+        linear-gradient(180deg, rgba(255,255,255,0.30), rgba(255,255,255,0));
+      opacity:.75;
     }
     a{color:inherit}
-    .wrap{width:min(1360px,calc(100% - 48px));margin:0 auto}
-    .hero{padding:64px 0 44px;border-bottom:1px solid var(--line)}
-    .hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:end}
-    .eyebrow,.slabel,.subsection-label,.metric-label,.table-meta,.range-note,.chip,.footer-note,th{font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;font-size:11px}
-    .eyebrow{color:var(--cyan);margin-bottom:18px}
-    .hero-title{font-family:var(--display);font-size:clamp(66px,10vw,118px);line-height:.88;letter-spacing:.03em;margin-bottom:22px}
-    .hero-title span{color:var(--accent)}
-    .hero-copy{max-width:760px;color:var(--muted);font-size:15px;line-height:1.9;margin-bottom:26px}
+    .wrap{width:min(1380px,calc(100% - 48px));margin:0 auto}
+    .page-shell{position:relative;z-index:1}
+    .eyebrow,.slabel,.subsection-label,.metric-label,.table-meta,.range-note,.chip,.footer-note,th,.section-note,.telemetry-label{font-family:var(--mono);letter-spacing:.11em;text-transform:uppercase;font-size:11px}
+    .masthead{padding:40px 0 28px}
+    .mast-grid{display:grid;grid-template-columns:1.18fr .82fr;gap:22px;align-items:stretch}
+    .hero-card,.telemetry-card,.kpi,.board,.callout-panel{border:1px solid var(--line);box-shadow:var(--shadow)}
+    .hero-card{
+      position:relative;
+      background:linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.52));
+      border-radius:30px;
+      padding:34px 36px 30px;
+      overflow:hidden;
+    }
+    .hero-card::before{
+      content:"";
+      position:absolute;
+      inset:0 auto auto 0;
+      width:100%;
+      height:10px;
+      background:linear-gradient(90deg,var(--accent) 0%, var(--accent) 36%, transparent 36%, transparent 42%, var(--accent-2) 42%, var(--accent-2) 62%, transparent 62%);
+    }
+    .hero-card::after{
+      content:"";
+      position:absolute;
+      right:-38px;
+      bottom:-40px;
+      width:220px;
+      height:220px;
+      border:22px solid rgba(31,87,210,0.08);
+      border-radius:50%;
+    }
+    .eyebrow{color:var(--accent);margin-bottom:16px}
+    .hero-kicker{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:7px 12px;
+      border-radius:999px;
+      background:rgba(215,38,56,0.08);
+      color:var(--accent);
+      font-family:var(--mono);
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      font-size:11px;
+      margin-bottom:16px;
+    }
+    .hero-title{
+      font-family:var(--display);
+      font-size:clamp(82px,10.5vw,148px);
+      line-height:.78;
+      letter-spacing:.03em;
+      margin-bottom:18px;
+    }
+    .hero-copy{
+      max-width:760px;
+      color:#454c58;
+      font-size:15px;
+      line-height:1.9;
+      margin-bottom:24px;
+    }
     .chip-row{display:flex;flex-wrap:wrap;gap:10px}
-    .chip{border:1px solid var(--line2);border-radius:999px;padding:8px 12px;color:var(--muted);background:rgba(255,255,255,0.03)}
-    .chip.hot{color:var(--accent);border-color:rgba(255,107,53,0.35);background:rgba(255,107,53,0.08)}
-    .chip.cool{color:var(--cyan);border-color:rgba(40,199,250,0.35);background:rgba(40,199,250,0.08)}
-    .chip.good{color:var(--green);border-color:rgba(89,248,178,0.35);background:rgba(89,248,178,0.08)}
-    .hero-panel{background:linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));border:1px solid var(--line);border-radius:24px;padding:24px;backdrop-filter:blur(12px);box-shadow:0 20px 50px rgba(0,0,0,0.22)}
-    .hero-panel h3{font-family:var(--display);font-size:40px;letter-spacing:.04em;line-height:.95;margin:10px 0 18px}
-    .hero-stat{padding:14px 0;border-top:1px solid var(--line)}
-    .hero-stat strong{display:block;font-size:22px;font-weight:700}
-    .hero-panel p{font-size:13px;color:var(--muted);line-height:1.8;margin-top:16px}
-    .kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);margin:0 auto}
-    .kpi{background:rgba(7,12,24,0.82);padding:28px 24px}
-    .kpi-value{font-family:var(--display);font-size:52px;line-height:.95;letter-spacing:.03em;margin-bottom:6px}
-    .kpi-copy{font-size:12px;color:var(--muted);margin-top:4px}
-    .section{padding:34px 0;border-top:1px solid var(--line)}
-    .grid-2,.grid-3{display:grid;gap:18px}
-    .grid-2{grid-template-columns:1.05fr .95fr}
-    .grid-3{grid-template-columns:1fr 1fr 1fr}
-    .card{background:linear-gradient(180deg, rgba(19,29,51,0.72), rgba(11,18,32,0.76));border:1px solid var(--line);border-radius:24px;padding:28px;box-shadow:0 22px 50px rgba(0,0,0,0.18);overflow:hidden}
-    .slabel{color:var(--muted);display:flex;gap:12px;align-items:center;margin-bottom:16px}
-    .slabel::after{content:"";height:1px;flex:1;background:var(--line)}
-    .ctitle{font-family:var(--display);font-size:38px;line-height:.92;letter-spacing:.04em;margin-bottom:12px}
+    .chip{
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:9px 12px;
+      color:#5d6370;
+      background:rgba(255,255,255,0.54);
+    }
+    .chip.hot{color:var(--accent);border-color:rgba(215,38,56,0.22);background:rgba(215,38,56,0.08)}
+    .chip.cool{color:var(--accent-2);border-color:rgba(31,87,210,0.18);background:rgba(31,87,210,0.08)}
+    .chip.good{color:var(--green);border-color:rgba(23,129,95,0.18);background:rgba(23,129,95,0.08)}
+    .telemetry-card{
+      background:linear-gradient(180deg,var(--coal) 0%, var(--coal-2) 100%);
+      color:#f2f5f8;
+      border-radius:30px;
+      padding:28px;
+      position:relative;
+      overflow:hidden;
+    }
+    .telemetry-card::before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height:8px;
+      background:linear-gradient(90deg,var(--accent),var(--accent-2));
+    }
+    .telemetry-label{color:#8ea4ff;margin-bottom:14px}
+    .telemetry-card h2{
+      font-family:var(--display);
+      font-size:54px;
+      line-height:.82;
+      letter-spacing:.04em;
+      margin-bottom:18px;
+    }
+    .telemetry-note{font-size:13px;line-height:1.85;color:#bcc6d7;margin-top:18px}
+    .telemetry-stat{padding:14px 0;border-top:1px solid rgba(255,255,255,0.10)}
+    .telemetry-stat strong{display:block;font-size:24px;line-height:1.3;margin-top:4px}
+    .metric-band{padding:8px 0 0}
+    .kpi-rack{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .kpi{
+      background:rgba(255,255,255,0.62);
+      backdrop-filter:blur(8px);
+      border-radius:24px;
+      padding:22px 22px 20px;
+      position:relative;
+      overflow:hidden;
+    }
+    .kpi::before{
+      content:"";
+      position:absolute;
+      inset:0 auto auto 0;
+      width:100%;
+      height:5px;
+      background:linear-gradient(90deg,var(--accent), transparent 75%);
+    }
+    .kpi:nth-child(2)::before{background:linear-gradient(90deg,var(--accent-2), transparent 75%)}
+    .kpi:nth-child(3)::before{background:linear-gradient(90deg,var(--green), transparent 75%)}
+    .kpi:nth-child(4)::before{background:linear-gradient(90deg,var(--amber), transparent 75%)}
+    .kpi-value{font-family:var(--display);font-size:56px;line-height:.84;letter-spacing:.03em;margin-bottom:4px}
+    .kpi-copy{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.7}
+    .callout-wrap{padding:18px 0 6px}
+    .callout-panel{
+      background:linear-gradient(90deg, rgba(22,26,33,0.98) 0%, rgba(35,43,58,0.96) 100%);
+      color:#f4f7fb;
+      border-radius:24px;
+      padding:18px 22px;
+      display:grid;
+      grid-template-columns:.32fr 1fr;
+      gap:18px;
+      align-items:center;
+    }
+    .callout-label{
+      font-family:var(--mono);
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      font-size:11px;
+      color:#8ea4ff;
+    }
+    .callout-copy{font-size:15px;line-height:1.8;color:#d6dce7}
+    .section{padding:28px 0}
+    .main-grid,.split-grid,.analysis-grid,.story-grid{display:grid;gap:18px}
+    .main-grid{grid-template-columns:1.08fr .92fr}
+    .split-grid{grid-template-columns:.95fr 1.05fr}
+    .analysis-grid{grid-template-columns:1fr 1fr 1fr}
+    .board{
+      position:relative;
+      background:rgba(255,255,255,0.62);
+      backdrop-filter:blur(8px);
+      border-radius:28px;
+      padding:28px;
+      overflow:hidden;
+    }
+    .board::before{
+      content:"";
+      position:absolute;
+      inset:0 auto auto 0;
+      width:100%;
+      height:6px;
+      background:linear-gradient(90deg,var(--accent), transparent 72%);
+    }
+    .board-table::before{background:linear-gradient(90deg,var(--accent-2), transparent 72%)}
+    .board-secondary::before{background:linear-gradient(90deg,var(--green), transparent 72%)}
+    .board-alert::before{background:linear-gradient(90deg,var(--amber), transparent 72%)}
+    .board-dark{
+      background:linear-gradient(180deg,#151b26 0%, #1d2430 100%);
+      color:#eef3f8;
+      border-color:rgba(0,0,0,0);
+    }
+    .board-dark::before{background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+    .board-dark .copy,.board-dark .range-note,.board-dark .metric-label,.board-dark .subsection-label{color:#bcc6d7}
+    .board-dark .slabel{color:#f0f4fa}
+    .slabel{display:flex;align-items:center;gap:10px;color:var(--accent);margin-bottom:14px}
+    .slabel::before{content:"";width:10px;height:10px;border-radius:50%;background:currentColor}
+    .ctitle{font-family:var(--display);font-size:50px;line-height:.82;letter-spacing:.04em;margin-bottom:10px}
     .copy{font-size:13px;color:var(--muted);line-height:1.85}
-    .divider{height:1px;background:var(--line);margin:22px 0}
-    .prob-row,.feature-row,.watch-item,.shift-row{margin-bottom:16px}
+    .divider{height:1px;background:var(--line);margin:20px 0}
+    .board-dark .divider{background:rgba(255,255,255,0.10)}
+    .prob-row,.feature-row,.watch-item,.shift-row,.team-row{margin-bottom:16px}
+    .prob-row:last-child,.feature-row:last-child,.watch-item:last-child,.shift-row:last-child,.team-row:last-child{margin-bottom:0}
+    .prob-row{
+      position:relative;
+      padding:14px 16px 14px 18px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:rgba(255,255,255,0.52);
+    }
+    .prob-row::before{
+      content:"";
+      position:absolute;
+      inset:14px auto 14px 0;
+      width:4px;
+      border-radius:0 999px 999px 0;
+      background:var(--team-color, var(--accent));
+    }
     .prob-head,.feature-head,.team-row-head,.forecast-topline,.mini-bar-row{display:flex;justify-content:space-between;gap:14px;align-items:center}
     .driver-line,.team-row-name,.forecast-name,.driver-cell{display:flex;align-items:center;gap:10px}
     .driver-cell{gap:12px}
-    .driver-name{font-size:15px;font-weight:700}
+    .driver-name{font-size:15px;font-weight:800}
     .prob-meta{font-size:12px;color:var(--muted);margin-top:4px}
-    .prob-value{font-family:var(--display);font-size:34px;color:var(--accent);white-space:nowrap}
-    .prob-bar{height:8px;border-radius:999px;background:rgba(255,255,255,0.06);overflow:hidden;margin:10px 0 6px}
+    .prob-value{font-family:var(--display);font-size:40px;color:var(--team-color, var(--accent));white-space:nowrap;line-height:.85}
+    .prob-bar{height:8px;border-radius:999px;background:rgba(22,26,33,0.07);overflow:hidden;margin:10px 0 6px}
     .prob-bar.slim{height:6px;margin:8px 0 0}
     .prob-bar span{display:block;height:100%;border-radius:999px}
-    .team-swatch{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 4px rgba(255,255,255,0.03)}
-    .rank-chip{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,0.06);color:var(--muted);font-family:var(--mono);font-size:10px}
+    .team-swatch{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 4px rgba(22,26,33,0.04)}
+    .rank-chip{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(22,26,33,0.06);color:var(--muted);font-family:var(--mono);font-size:10px}
     table{width:100%;border-collapse:collapse}
-    th,td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:left}
+    th,td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left}
     th{color:var(--muted)}
     td{font-size:13px;vertical-align:middle}
     td:nth-child(1),td:nth-child(3),td:nth-child(4),td:nth-child(5),td:nth-child(6){text-align:right}
     td:nth-child(7){min-width:118px}
+    tr:hover td{background:rgba(255,255,255,0.52)}
+    .table-wrap{overflow:auto}
     .form-pill{display:inline-flex;align-items:center;justify-content:center;width:30px;height:24px;border-radius:8px;font-family:var(--mono);font-size:10px;margin-right:6px}
-    .form-pill.good{background:rgba(89,248,178,0.14);color:var(--green)}
-    .form-pill.mid{background:rgba(255,209,102,0.14);color:var(--amber)}
-    .form-pill.bad{background:rgba(255,102,122,0.14);color:var(--red)}
-    .callout{background:linear-gradient(180deg, rgba(255,107,53,0.10), rgba(255,107,53,0.04));border-color:rgba(255,107,53,0.18)}
-    .forecast-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:22px}
-    .forecast-card{background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:20px;padding:18px}
-    .forecast-rank{font-family:var(--display);font-size:26px;letter-spacing:.04em;color:var(--cyan)}
-    .forecast-ci{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em}
+    .form-pill.good{background:rgba(23,129,95,0.12);color:var(--green)}
+    .form-pill.mid{background:rgba(187,127,20,0.12);color:var(--amber)}
+    .form-pill.bad{background:rgba(193,73,83,0.12);color:var(--red)}
+    .section-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:18px}
+    .section-note{color:var(--muted);max-width:420px;line-height:1.8}
+    .forecast-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+    .forecast-card{
+      position:relative;
+      background:rgba(255,255,255,0.66);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:18px;
+      overflow:hidden;
+    }
+    .forecast-card::before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height:4px;
+      background:var(--team-color, var(--accent));
+    }
+    .forecast-rank{font-family:var(--display);font-size:34px;letter-spacing:.04em;color:var(--team-color, var(--accent));line-height:.88}
+    .forecast-ci{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;text-align:right}
     .forecast-metrics,.model-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0 16px}
-    .metric-value{font-family:var(--display);font-size:28px;line-height:.95;letter-spacing:.03em}
+    .metric-value{font-family:var(--display);font-size:34px;line-height:.86;letter-spacing:.03em}
     .mini-bar-group{display:grid;gap:10px}
     .mini-bar-row span:first-child{font-size:11px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em}
     .mini-bar-row .prob-bar{flex:1;margin:0 0 0 12px}
-    .subsection-label{color:var(--cyan);margin-bottom:10px}
-    .model-card{background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:18px;padding:18px}
-    .model-card.highlight{border-color:rgba(89,248,178,0.25);background:linear-gradient(180deg, rgba(89,248,178,0.08), rgba(255,255,255,0.03))}
+    .subsection-label{color:var(--accent-2);margin-bottom:10px}
+    .team-row,.shift-row{
+      padding:12px 14px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:rgba(255,255,255,0.48);
+    }
+    .team-row-value{font-weight:700}
+    .shift-row .team-row-value{color:var(--shift-color, var(--accent))}
+    .feature-head span:first-child{font-weight:700}
+    .model-card{
+      background:rgba(255,255,255,0.48);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px;
+      margin-bottom:14px;
+    }
+    .model-card:last-child{margin-bottom:0}
+    .model-card.highlight{
+      border-color:rgba(23,129,95,0.22);
+      background:linear-gradient(180deg, rgba(23,129,95,0.10), rgba(255,255,255,0.48));
+    }
     .watch-item p{font-size:13px;color:var(--muted);line-height:1.8}
-    .story{background:linear-gradient(180deg, rgba(11,18,32,0.96), rgba(7,12,24,0.96));border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:52px 0;margin-top:8px}
-    .story-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:start}
-    .story-copy p{color:var(--muted);font-size:14px;line-height:1.9;margin-bottom:16px}
-    .story-copy strong{color:var(--text)}
-    .method-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
-    .method-card{background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:18px;padding:18px}
-    .method-card p{font-size:13px;color:var(--muted);line-height:1.8}
-    .footer{padding:30px 0 44px}
+    .memo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:20px}
+    .memo-tile{
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:18px;
+      padding:16px;
+    }
+    .memo-value{font-family:var(--display);font-size:42px;line-height:.86;letter-spacing:.03em;margin:8px 0 6px}
+    .memo-tile p{font-size:12px;color:#c0cada;line-height:1.8}
+    .story-band{
+      background:linear-gradient(135deg,#151b26 0%, #1c2431 58%, #10151e 100%);
+      border-top:1px solid rgba(0,0,0,0.05);
+      border-bottom:1px solid rgba(0,0,0,0.05);
+      padding:46px 0;
+      margin-top:8px;
+    }
+    .story-grid{grid-template-columns:1.12fr .88fr;align-items:start}
+    .story-copy{padding-right:8px}
+    .story-copy p{color:#c0cada;font-size:14px;line-height:1.9;margin-bottom:16px}
+    .story-copy strong{color:#f2f5f8}
+    .slabel-invert{color:#8ea4ff}
+    .story-title{font-family:var(--display);font-size:58px;line-height:.82;letter-spacing:.04em;color:#f4f7fb;margin-bottom:16px}
+    .method-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .method-card{
+      background:rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:18px;
+      padding:18px;
+    }
+    .method-card p{font-size:13px;color:#c0cada;line-height:1.8}
+    .footer{padding:28px 0 42px}
     .footer-grid{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
-    .footer-grid strong{font-family:var(--display);font-size:22px;color:var(--text);letter-spacing:.03em}
-    @media (max-width:1200px){.hero-grid,.grid-2,.grid-3,.story-grid,.forecast-grid{grid-template-columns:1fr 1fr}.forecast-grid{grid-template-columns:repeat(3,1fr)}}
-    @media (max-width:860px){.wrap{width:min(100% - 28px,1360px)}.hero-grid,.grid-2,.grid-3,.story-grid,.forecast-grid,.kpi-strip,.method-grid{grid-template-columns:1fr}.hero-title{font-size:58px}.forecast-grid{grid-template-columns:1fr}table{display:block;overflow:auto}}
+    .footer-grid strong{font-family:var(--display);font-size:28px;color:var(--ink);letter-spacing:.03em}
+    .footer-right{text-align:right}
+    @media (max-width:1240px){
+      .mast-grid,.main-grid,.split-grid,.analysis-grid,.story-grid{grid-template-columns:1fr}
+      .forecast-grid{grid-template-columns:repeat(3,1fr)}
+      .callout-panel{grid-template-columns:1fr}
+      .memo-grid{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width:900px){
+      .wrap{width:min(100% - 28px,1380px)}
+      .kpi-rack,.forecast-grid,.method-grid,.memo-grid{grid-template-columns:1fr}
+      .section-head{flex-direction:column;align-items:flex-start}
+      .hero-title{font-size:72px}
+      .telemetry-card h2,.ctitle,.story-title{font-size:48px}
+      table{display:block;overflow:auto}
+      .footer-right{text-align:left}
+    }
     </style>
 </head>
 <body>
-  <header class="hero">
-    <div class="wrap">
-      <div class="hero-grid">
-        <div>
-          <div class="eyebrow">Portfolio ML System | Formula 1 2026 | Snapshot April 7, 2026</div>
-          <h1 class="hero-title">FORMULA 1<br/><span>FORECAST ENGINE</span></h1>
-          <p class="hero-copy">A consulting-grade racing intelligence dashboard built on top of an ensemble predictor: grouped XGBoost ranking, Bradley-Terry driver strength, championship state, and Monte Carlo uncertainty layered into one executive-facing view. The objective is not just to call winners, but to explain how car order, driver form, and season volatility are shifting under the 2026 reset.</p>
-          <div class="chip-row">
-            <span class="chip hot">3 rounds complete | next race Miami Grand Prix</span>
-            <span class="chip cool">3,458 driver-race rows | 54 model columns</span>
-            <span class="chip good">10,000 Monte Carlo season sims</span>
-            <span class="chip">Ensemble stack beats baselines on rank quality</span>
-            <span class="chip">Current leader Kimi Antonelli | model favourite George Russell</span>
-          </div>
+  <div class="page-shell">
+    <header class="masthead">
+      <div class="wrap">
+        <div class="mast-grid">
+          <section class="hero-card">
+            <div class="eyebrow">Executive race briefing | Formula 1 2026 | Snapshot May 13, 2026</div>
+            <div class="hero-kicker">Pit Wall Dossier</div>
+            <h1 class="hero-title">CHAMPIONSHIP<br/>CONTROL ROOM</h1>
+            <p class="hero-copy">A consulting-grade motorsport briefing designed for portfolio presentation: live championship table, probabilistic title map, and race-week scenario board in one sheet. The forecasting stack blends grouped XGBoost ranking, Bradley-Terry driver strength, constructor state, and Monte Carlo simulation so the page reads like an operating review rather than a fan-only scoreboard.</p>
+            <div class="chip-row">
+              <span class="chip hot">3 rounds complete | next race Miami Grand Prix</span>
+              <span class="chip cool">3,458 driver-race rows | 54 model columns</span>
+              <span class="chip good">10,000 Monte Carlo season sims</span>
+              <span class="chip">Ensemble stack leads on race-order quality</span>
+              <span class="chip">Live leader Kimi Antonelli | forecast leader George Russell</span>
+            </div>
+          </section>
+          <aside class="telemetry-card">
+            <div class="telemetry-label">Trackside note</div>
+            <h2>THE TABLE IS A LAGGING INDICATOR</h2>
+            <div class="telemetry-stat">
+              <div class="metric-label">Current points leader</div>
+              <strong>Kimi Antonelli | 72 pts</strong>
+            </div>
+            <div class="telemetry-stat">
+              <div class="metric-label">Forecast title favourite</div>
+              <strong>George Russell | 79.4% WDC probability</strong>
+            </div>
+            <div class="telemetry-stat">
+              <div class="metric-label">Constructor control</div>
+              <strong>Mercedes | 100.0% WCC probability</strong>
+            </div>
+            <p class="telemetry-note">Kimi Antonelli leads the live table by 9 points over George Russell, but the simulator still prefers George Russell over the full season horizon.</p>
+          </aside>
         </div>
-        <aside class="hero-panel">
-          <div class="subsection-label">Why this matters</div>
-          <h3>STANDINGS AND FORECASTS ARE NOT THE SAME THING</h3>
-          <div class="hero-stat">
-            <div class="metric-label">Points leader after round 3</div>
-            <strong>Kimi Antonelli | 72 pts</strong>
-          </div>
-          <div class="hero-stat">
-            <div class="metric-label">Model favourite for the title</div>
-            <strong>George Russell | 79.4% WDC probability</strong>
-          </div>
-          <div class="hero-stat">
-            <div class="metric-label">Constructor control</div>
-            <strong>Mercedes | 100.0% WCC probability</strong>
-          </div>
-          <p>The dashboard is designed for upper-management audiences: not just who is ahead, but where the operating picture is changing, where the model is trustworthy, and where the current system still needs improvement.</p>
-        </aside>
       </div>
-    </div>
-  </header>
+    </header>
 
-  <section class="kpi-strip wrap">
-    <div class="kpi">
-      <div class="kpi-value" style="color:var(--accent)">79.4%</div>
-      <div class="metric-label">George Russell title probability</div>
-      <div class="kpi-copy">Forecast favourite even though Antonelli leads the live table</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-value" style="color:var(--cyan)">0.627</div>
-      <div class="metric-label">Mean race-order Spearman</div>
-      <div class="kpi-copy">Walk-forward validation across 92 historical races</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-value" style="color:var(--green)">100.0%</div>
-      <div class="metric-label">Mercedes WCC probability</div>
-      <div class="kpi-copy">123 points and +46 over Ferrari</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-value" style="color:var(--amber)">11.5%</div>
-      <div class="metric-label">Kimi Antonelli Bahrain Grand Prix win chance</div>
-      <div class="kpi-copy">No driver above 12% win odds in the current diagnostic race-week snapshot</div>
-    </div>
-  </section>
+    <section class="metric-band">
+      <div class="wrap kpi-rack">
+        <article class="kpi">
+          <div class="kpi-value" style="color:var(--accent)">79.4%</div>
+          <div class="metric-label">George Russell title probability</div>
+          <div class="kpi-copy">58.8% probability edge over Kimi Antonelli</div>
+        </article>
+        <article class="kpi">
+          <div class="kpi-value" style="color:var(--accent-2)">0.627</div>
+          <div class="metric-label">Walk-forward rank quality</div>
+          <div class="kpi-copy">92 historical races scored with no future leakage</div>
+        </article>
+        <article class="kpi">
+          <div class="kpi-value" style="color:var(--green)">100.0%</div>
+          <div class="metric-label">Mercedes WCC probability</div>
+          <div class="kpi-copy">46 point margin over Ferrari</div>
+        </article>
+        <article class="kpi">
+          <div class="kpi-value" style="color:var(--amber)">11.3%</div>
+          <div class="metric-label">Kimi Antonelli race-win chance</div>
+          <div class="kpi-copy">Miami Grand Prix forecast remains wide open at the front</div>
+        </article>
+      </div>
+    </section>
 
-  <section class="section">
-    <div class="wrap grid-2">
-      <article class="card">
-        <div class="slabel">Championship market</div>
-        <div class="ctitle">WDC OUTLOOK</div>
-        <p class="copy">Expected final points anchor the bar length; title probability sits on the right. That keeps the visual useful even when the forecast collapses into a two-driver fight.</p>
-        <div class="divider"></div>
-        
-            <div class="prob-row">
+    <section class="callout-wrap">
+      <div class="wrap">
+        <div class="callout-panel">
+          <div class="callout-label">Management summary</div>
+          <div class="callout-copy">Kimi Antonelli leads the live table by 9 points over George Russell, but the simulator still prefers George Russell over the full season horizon. Mercedes is 46 points clear of Ferrari and already owns 100.0% of the WCC book.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap main-grid">
+        <article class="board">
+          <div class="slabel">Title map</div>
+          <div class="ctitle">WDC PROBABILITY LADDER</div>
+          <p class="copy">Expected final points determine bar length; title probability sits on the right. That keeps the visual useful for leadership audiences even when the championship compresses into a small number of viable contenders.</p>
+          <div class="divider"></div>
+
+            <div class="prob-row" style="--team-color:#27F4D2">
               <div class="prob-head">
                 <div>
                   <div class="driver-line">
@@ -214,8 +461,8 @@
               <div class="prob-bar"><span style="width:100.0%;background:linear-gradient(90deg,#27F4D2,rgba(255,255,255,0.18))"></span></div>
               <div class="range-note">P10-P90 final points: 437 to 514</div>
             </div>
-            
-            <div class="prob-row">
+
+            <div class="prob-row" style="--team-color:#27F4D2">
               <div class="prob-head">
                 <div>
                   <div class="driver-line">
@@ -229,8 +476,8 @@
               <div class="prob-bar"><span style="width:91.6%;background:linear-gradient(90deg,#27F4D2,rgba(255,255,255,0.18))"></span></div>
               <div class="range-note">P10-P90 final points: 397 to 473</div>
             </div>
-            
-            <div class="prob-row">
+
+            <div class="prob-row" style="--team-color:#E8002D">
               <div class="prob-head">
                 <div>
                   <div class="driver-line">
@@ -244,8 +491,8 @@
               <div class="prob-bar"><span style="width:68.2%;background:linear-gradient(90deg,#E8002D,rgba(255,255,255,0.18))"></span></div>
               <div class="range-note">P10-P90 final points: 287 to 360</div>
             </div>
-            
-            <div class="prob-row">
+
+            <div class="prob-row" style="--team-color:#E8002D">
               <div class="prob-head">
                 <div>
                   <div class="driver-line">
@@ -259,8 +506,8 @@
               <div class="prob-bar"><span style="width:61.3%;background:linear-gradient(90deg,#E8002D,rgba(255,255,255,0.18))"></span></div>
               <div class="range-note">P10-P90 final points: 257 to 326</div>
             </div>
-            
-            <div class="prob-row">
+
+            <div class="prob-row" style="--team-color:#FF8000">
               <div class="prob-head">
                 <div>
                   <div class="driver-line">
@@ -274,8 +521,8 @@
               <div class="prob-bar"><span style="width:38.5%;background:linear-gradient(90deg,#FF8000,rgba(255,255,255,0.18))"></span></div>
               <div class="range-note">P10-P90 final points: 150 to 216</div>
             </div>
-            
-            <div class="prob-row">
+
+            <div class="prob-row" style="--team-color:#FF8000">
               <div class="prob-head">
                 <div>
                   <div class="driver-line">
@@ -289,28 +536,28 @@
               <div class="prob-bar"><span style="width:37.6%;background:linear-gradient(90deg,#FF8000,rgba(255,255,255,0.18))"></span></div>
               <div class="range-note">P10-P90 final points: 147 to 212</div>
             </div>
-            
-      </article>
 
-      <article class="card">
-        <div class="slabel">Live driver table</div>
-        <div class="ctitle">DRIVER STANDINGS</div>
-        <p class="copy">Current 2026 points through round 3, including sprint points. Last-three finish tokens make momentum legible without burying the audience in raw lap data.</p>
-        <div class="divider"></div>
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Driver</th>
-              <th>Pts</th>
-              <th>Wins</th>
-              <th>Podiums</th>
-              <th>Avg</th>
-              <th>Last 3</th>
-            </tr>
-          </thead>
-          <tbody>
-            
+        </article>
+
+        <article class="board board-table">
+          <div class="slabel">Live order</div>
+          <div class="ctitle">DRIVER STANDINGS</div>
+          <p class="copy">Current 2026 points through round 3, including sprint scoring. Last-three finish tokens keep momentum visible without drowning the page in lap-level detail.</p>
+          <div class="divider"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Driver</th>
+                  <th>Pts</th>
+                  <th>Wins</th>
+                  <th>Podiums</th>
+                  <th>Avg</th>
+                  <th>Last 3</th>
+                </tr>
+              </thead>
+              <tbody>
             <tr>
               <td>1</td>
               <td>
@@ -328,7 +575,7 @@
               <td>1.33</td>
               <td><span class='form-pill good'>P2</span><span class='form-pill good'>P1</span><span class='form-pill good'>P1</span></td>
             </tr>
-            
+
             <tr>
               <td>2</td>
               <td>
@@ -346,7 +593,7 @@
               <td>2.33</td>
               <td><span class='form-pill good'>P1</span><span class='form-pill good'>P2</span><span class='form-pill mid'>P4</span></td>
             </tr>
-            
+
             <tr>
               <td>3</td>
               <td>
@@ -364,7 +611,7 @@
               <td>3.33</td>
               <td><span class='form-pill good'>P3</span><span class='form-pill mid'>P4</span><span class='form-pill good'>P3</span></td>
             </tr>
-            
+
             <tr>
               <td>4</td>
               <td>
@@ -382,7 +629,7 @@
               <td>4.33</td>
               <td><span class='form-pill mid'>P4</span><span class='form-pill good'>P3</span><span class='form-pill mid'>P6</span></td>
             </tr>
-            
+
             <tr>
               <td>5</td>
               <td>
@@ -400,7 +647,7 @@
               <td>10.00</td>
               <td><span class='form-pill mid'>P5</span><span class='form-pill bad'>P20</span><span class='form-pill mid'>P5</span></td>
             </tr>
-            
+
             <tr>
               <td>6</td>
               <td>
@@ -418,7 +665,7 @@
               <td>14.00</td>
               <td><span class='form-pill bad'>P21</span><span class='form-pill bad'>P19</span><span class='form-pill good'>P2</span></td>
             </tr>
-            
+
             <tr>
               <td>7</td>
               <td>
@@ -436,7 +683,7 @@
               <td>11.33</td>
               <td><span class='form-pill mid'>P7</span><span class='form-pill mid'>P5</span><span class='form-pill bad'>P22</span></td>
             </tr>
-            
+
             <tr>
               <td>8</td>
               <td>
@@ -454,7 +701,7 @@
               <td>7.67</td>
               <td><span class='form-pill mid'>P10</span><span class='form-pill mid'>P6</span><span class='form-pill mid'>P7</span></td>
             </tr>
-            
+
             <tr>
               <td>9</td>
               <td>
@@ -472,7 +719,7 @@
               <td>10.00</td>
               <td><span class='form-pill mid'>P6</span><span class='form-pill bad'>P16</span><span class='form-pill mid'>P8</span></td>
             </tr>
-            
+
             <tr>
               <td>10</td>
               <td>
@@ -490,22 +737,22 @@
               <td>9.67</td>
               <td><span class='form-pill bad'>P13</span><span class='form-pill mid'>P7</span><span class='form-pill mid'>P9</span></td>
             </tr>
-            
-          </tbody>
-        </table>
-      </article>
-    </div>
-  </section>
+            </tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+    </section>
 
-  <section class="section">
-    <div class="wrap grid-2">
-      <article class="card">
-        <div class="slabel">Constructor race</div>
-        <div class="ctitle">WCC CONTROL ROOM</div>
-        <p class="copy">Mercedes already owns the strategic position of the season: 123 points after three rounds, a +46 gap to Ferrari, and a current forecast that assigns the team the entire WCC probability mass.</p>
-        <div class="divider"></div>
-        
-            <div class="team-row">
+    <section class="section">
+      <div class="wrap split-grid">
+        <article class="board board-secondary">
+          <div class="slabel">Team control</div>
+          <div class="ctitle">CONSTRUCTOR ORDER</div>
+          <p class="copy">Current constructor points through round 3. The table is shown alongside pace-reset movement so you can separate present scoring from adaptation speed under the new regulations.</p>
+          <div class="divider"></div>
+
+            <div class="team-row" style="--team-color:#27F4D2">
               <div class="team-row-head">
                 <div class="team-row-name">
                   <span class="rank-chip">1</span>
@@ -516,8 +763,8 @@
               </div>
               <div class="prob-bar slim"><span style="width:100.0%;background:linear-gradient(90deg,#27F4D2,rgba(255,255,255,0.18))"></span></div>
             </div>
-            
-            <div class="team-row">
+
+            <div class="team-row" style="--team-color:#E8002D">
               <div class="team-row-head">
                 <div class="team-row-name">
                   <span class="rank-chip">2</span>
@@ -528,8 +775,8 @@
               </div>
               <div class="prob-bar slim"><span style="width:62.6%;background:linear-gradient(90deg,#E8002D,rgba(255,255,255,0.18))"></span></div>
             </div>
-            
-            <div class="team-row">
+
+            <div class="team-row" style="--team-color:#FF8000">
               <div class="team-row-head">
                 <div class="team-row-name">
                   <span class="rank-chip">3</span>
@@ -540,8 +787,8 @@
               </div>
               <div class="prob-bar slim"><span style="width:30.9%;background:linear-gradient(90deg,#FF8000,rgba(255,255,255,0.18))"></span></div>
             </div>
-            
-            <div class="team-row">
+
+            <div class="team-row" style="--team-color:#B6BABD">
               <div class="team-row-head">
                 <div class="team-row-name">
                   <span class="rank-chip">4</span>
@@ -552,8 +799,8 @@
               </div>
               <div class="prob-bar slim"><span style="width:13.8%;background:linear-gradient(90deg,#B6BABD,rgba(255,255,255,0.18))"></span></div>
             </div>
-            
-            <div class="team-row">
+
+            <div class="team-row" style="--team-color:#FF87BC">
               <div class="team-row-head">
                 <div class="team-row-name">
                   <span class="rank-chip">5</span>
@@ -564,8 +811,8 @@
               </div>
               <div class="prob-bar slim"><span style="width:13.0%;background:linear-gradient(90deg,#FF87BC,rgba(255,255,255,0.18))"></span></div>
             </div>
-            
-            <div class="team-row">
+
+            <div class="team-row" style="--team-color:#3671C6">
               <div class="team-row-head">
                 <div class="team-row-name">
                   <span class="rank-chip">6</span>
@@ -576,8 +823,8 @@
               </div>
               <div class="prob-bar slim"><span style="width:13.0%;background:linear-gradient(90deg,#3671C6,rgba(255,255,255,0.18))"></span></div>
             </div>
-            
-            <div class="team-row">
+
+            <div class="team-row" style="--team-color:#6692FF">
               <div class="team-row-head">
                 <div class="team-row-name">
                   <span class="rank-chip">7</span>
@@ -588,16 +835,12 @@
               </div>
               <div class="prob-bar slim"><span style="width:9.8%;background:linear-gradient(90deg,#6692FF,rgba(255,255,255,0.18))"></span></div>
             </div>
-            
-      </article>
 
-      <article class="card callout">
-        <div class="slabel">2026 regime shift</div>
-        <div class="ctitle">CAR ORDER RESET</div>
-        <p class="copy">The clearest storyline in the live data is not incremental improvement, but a rapid repricing of team strength under the new regulations. These deltas compare average race points in 2026 against each team's 2025 baseline.</p>
-        <div class="divider"></div>
-        <div class='subsection-label'>Fastest risers</div>
-                <div class="shift-row">
+          <div class="divider"></div>
+          <div class="subsection-label">Reset winners and losers</div>
+          <div class="range-note">Points delta per race versus the 2025 baseline</div>
+          <div style="margin-top:14px"><div class='subsection-label'>Fastest risers</div>
+                <div class="shift-row" style="--shift-color:#59F8B2;--team-color:#27F4D2">
                   <div class="team-row-head">
                     <div class="team-row-name">
                       <span class="team-swatch" style="background:#27F4D2"></span>
@@ -607,8 +850,8 @@
                   </div>
                   <div class="prob-bar slim"><span style="width:100.0%;background:#59F8B2"></span></div>
                 </div>
-                
-                <div class="shift-row">
+
+                <div class="shift-row" style="--shift-color:#59F8B2;--team-color:#E8002D">
                   <div class="team-row-head">
                     <div class="team-row-name">
                       <span class="team-swatch" style="background:#E8002D"></span>
@@ -618,8 +861,8 @@
                   </div>
                   <div class="prob-bar slim"><span style="width:45.7%;background:#59F8B2"></span></div>
                 </div>
-                
-                <div class="shift-row">
+
+                <div class="shift-row" style="--shift-color:#59F8B2;--team-color:#FF87BC">
                   <div class="team-row-head">
                     <div class="team-row-name">
                       <span class="team-swatch" style="background:#FF87BC"></span>
@@ -629,8 +872,8 @@
                   </div>
                   <div class="prob-bar slim"><span style="width:19.3%;background:#59F8B2"></span></div>
                 </div>
-                
-                <div class="shift-row">
+
+                <div class="shift-row" style="--shift-color:#59F8B2;--team-color:#B6BABD">
                   <div class="team-row-head">
                     <div class="team-row-name">
                       <span class="team-swatch" style="background:#B6BABD"></span>
@@ -641,7 +884,7 @@
                   <div class="prob-bar slim"><span style="width:11.3%;background:#59F8B2"></span></div>
                 </div>
                 <div class='subsection-label'>Biggest fallers</div>
-                <div class="shift-row">
+                <div class="shift-row" style="--shift-color:#FF667A;--team-color:#FF8000">
                   <div class="team-row-head">
                     <div class="team-row-name">
                       <span class="team-swatch" style="background:#FF8000"></span>
@@ -651,8 +894,8 @@
                   </div>
                   <div class="prob-bar slim"><span style="width:84.1%;background:#FF667A"></span></div>
                 </div>
-                
-                <div class="shift-row">
+
+                <div class="shift-row" style="--shift-color:#FF667A;--team-color:#3671C6">
                   <div class="team-row-head">
                     <div class="team-row-name">
                       <span class="team-swatch" style="background:#3671C6"></span>
@@ -662,8 +905,8 @@
                   </div>
                   <div class="prob-bar slim"><span style="width:50.4%;background:#FF667A"></span></div>
                 </div>
-                
-                <div class="shift-row">
+
+                <div class="shift-row" style="--shift-color:#FF667A;--team-color:#64C4FF">
                   <div class="team-row-head">
                     <div class="team-row-name">
                       <span class="team-swatch" style="background:#64C4FF"></span>
@@ -673,8 +916,8 @@
                   </div>
                   <div class="prob-bar slim"><span style="width:19.3%;background:#FF667A"></span></div>
                 </div>
-                
-                <div class="shift-row">
+
+                <div class="shift-row" style="--shift-color:#FF667A;--team-color:#229971">
                   <div class="team-row-head">
                     <div class="team-row-name">
                       <span class="team-swatch" style="background:#229971"></span>
@@ -684,23 +927,48 @@
                   </div>
                   <div class="prob-bar slim"><span style="width:14.6%;background:#FF667A"></span></div>
                 </div>
-                
-      </article>
-    </div>
-  </section>
+                </div>
+        </article>
 
-  <section class="section">
-    <div class="wrap">
-      <article class="card">
-        <div class="slabel">Diagnostic race-week snapshot</div>
-        <div class="ctitle">BAHRAIN GRAND PRIX FORECAST</div>
-        <p class="copy">This section turns the model into a presentable race brief: predicted order, uncertainty bounds, podium odds, top-five rates, and failure risk. It is deliberately probability-first, not just a ranked list.</p>
+        <article class="board board-dark">
+          <div class="slabel">Decision memo</div>
+          <div class="ctitle">WHERE THE MODEL EARNS TRUST</div>
+          <p class="copy">This page is built to be useful in a consulting conversation: not just who is ahead, but what is stable, what is volatile, and where the data story is intentionally separated from the current headline standings.</p>
+          <div class="memo-grid">
+            <div class="memo-tile">
+              <div class="subsection-label">Standings tension</div>
+              <div class="memo-value">9</div>
+              <p>Points between Kimi Antonelli and George Russell. The live table is close enough that a few weekends can still reshape the conversation.</p>
+            </div>
+            <div class="memo-tile">
+              <div class="subsection-label">Constructor margin</div>
+              <div class="memo-value">100.0%</div>
+              <p>Mercedes is 46 points clear of Ferrari and already owns 100.0% of the WCC book.</p>
+            </div>
+            <div class="memo-tile">
+              <div class="subsection-label">Race-week volatility</div>
+              <div class="memo-value">11.3%</div>
+              <p>Kimi Antonelli is the single most likely winner for Miami Grand Prix, but the front of the grid is still compressed with no driver above 11.3% win odds.</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <div class="slabel">Race week board</div>
+            <div class="ctitle">MIAMI GRAND PRIX SCENARIO BOARD</div>
+          </div>
+          <div class="section-note">Top projected finishers from the latest archived prediction. Each tile combines predicted finishing slot with win, podium, top-five and DNF probabilities, so pace and reliability are visible together.</div>
+        </div>
         <div class="forecast-grid">
-          
-            <article class="forecast-card">
+            <article class="forecast-card" style="--team-color:#27F4D2">
               <div class="forecast-topline">
                 <span class="forecast-rank">P1</span>
-                <span class="forecast-ci">Win CI 11.0% to 12.0%</span>
+                <span class="forecast-ci">Win CI 10.8% to 11.8%</span>
               </div>
               <div class="forecast-name">
                 <span class="team-swatch" style="background:#27F4D2"></span>
@@ -711,28 +979,28 @@
               </div>
               <div class="forecast-metrics">
                 <div>
-                  <div class="metric-value">11.5%</div>
+                  <div class="metric-value">11.3%</div>
                   <div class="metric-label">Win</div>
                 </div>
                 <div>
-                  <div class="metric-value">19.9%</div>
+                  <div class="metric-value">19.7%</div>
                   <div class="metric-label">Podium</div>
                 </div>
                 <div>
-                  <div class="metric-value">77.3%</div>
+                  <div class="metric-value">75.6%</div>
                   <div class="metric-label">Top 5</div>
                 </div>
               </div>
               <div class="mini-bar-group">
-                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:77.3%;background:#28C7FA"></span></div></div>
-                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:5.7%;background:#FF667A"></span></div></div>
+                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:75.6%;background:#28C7FA"></span></div></div>
+                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:5.2%;background:#FF667A"></span></div></div>
               </div>
             </article>
-            
-            <article class="forecast-card">
+
+            <article class="forecast-card" style="--team-color:#27F4D2">
               <div class="forecast-topline">
                 <span class="forecast-rank">P2</span>
-                <span class="forecast-ci">Win CI 8.4% to 9.4%</span>
+                <span class="forecast-ci">Win CI 8.1% to 9.0%</span>
               </div>
               <div class="forecast-name">
                 <span class="team-swatch" style="background:#27F4D2"></span>
@@ -743,28 +1011,28 @@
               </div>
               <div class="forecast-metrics">
                 <div>
-                  <div class="metric-value">8.9%</div>
+                  <div class="metric-value">8.6%</div>
                   <div class="metric-label">Win</div>
                 </div>
                 <div>
-                  <div class="metric-value">23.5%</div>
+                  <div class="metric-value">22.4%</div>
                   <div class="metric-label">Podium</div>
                 </div>
                 <div>
-                  <div class="metric-value">60.1%</div>
+                  <div class="metric-value">55.8%</div>
                   <div class="metric-label">Top 5</div>
                 </div>
               </div>
               <div class="mini-bar-group">
-                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:60.1%;background:#28C7FA"></span></div></div>
-                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:5.9%;background:#FF667A"></span></div></div>
+                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:55.8%;background:#28C7FA"></span></div></div>
+                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:5.4%;background:#FF667A"></span></div></div>
               </div>
             </article>
-            
-            <article class="forecast-card">
+
+            <article class="forecast-card" style="--team-color:#FF8000">
               <div class="forecast-topline">
                 <span class="forecast-rank">P3</span>
-                <span class="forecast-ci">Win CI 7.8% to 8.7%</span>
+                <span class="forecast-ci">Win CI 7.8% to 8.8%</span>
               </div>
               <div class="forecast-name">
                 <span class="team-swatch" style="background:#FF8000"></span>
@@ -779,24 +1047,24 @@
                   <div class="metric-label">Win</div>
                 </div>
                 <div>
-                  <div class="metric-value">25.8%</div>
+                  <div class="metric-value">26.0%</div>
                   <div class="metric-label">Podium</div>
                 </div>
                 <div>
-                  <div class="metric-value">52.2%</div>
+                  <div class="metric-value">51.2%</div>
                   <div class="metric-label">Top 5</div>
                 </div>
               </div>
               <div class="mini-bar-group">
-                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:52.2%;background:#28C7FA"></span></div></div>
-                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:10.2%;background:#FF667A"></span></div></div>
+                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:51.2%;background:#28C7FA"></span></div></div>
+                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:10.4%;background:#FF667A"></span></div></div>
               </div>
             </article>
-            
-            <article class="forecast-card">
+
+            <article class="forecast-card" style="--team-color:#3671C6">
               <div class="forecast-topline">
                 <span class="forecast-rank">P4</span>
-                <span class="forecast-ci">Win CI 7.6% to 8.5%</span>
+                <span class="forecast-ci">Win CI 7.7% to 8.6%</span>
               </div>
               <div class="forecast-name">
                 <span class="team-swatch" style="background:#3671C6"></span>
@@ -807,7 +1075,7 @@
               </div>
               <div class="forecast-metrics">
                 <div>
-                  <div class="metric-value">8.1%</div>
+                  <div class="metric-value">8.2%</div>
                   <div class="metric-label">Win</div>
                 </div>
                 <div>
@@ -815,17 +1083,17 @@
                   <div class="metric-label">Podium</div>
                 </div>
                 <div>
-                  <div class="metric-value">14.6%</div>
+                  <div class="metric-value">14.4%</div>
                   <div class="metric-label">Top 5</div>
                 </div>
               </div>
               <div class="mini-bar-group">
-                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:14.6%;background:#28C7FA"></span></div></div>
+                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:14.4%;background:#28C7FA"></span></div></div>
                 <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:10.9%;background:#FF667A"></span></div></div>
               </div>
             </article>
-            
-            <article class="forecast-card">
+
+            <article class="forecast-card" style="--team-color:#FF8000">
               <div class="forecast-topline">
                 <span class="forecast-rank">P5</span>
                 <span class="forecast-ci">Win CI 7.2% to 8.1%</span>
@@ -843,24 +1111,24 @@
                   <div class="metric-label">Win</div>
                 </div>
                 <div>
-                  <div class="metric-value">23.2%</div>
+                  <div class="metric-value">23.1%</div>
                   <div class="metric-label">Podium</div>
                 </div>
                 <div>
-                  <div class="metric-value">45.0%</div>
+                  <div class="metric-value">43.9%</div>
                   <div class="metric-label">Top 5</div>
                 </div>
               </div>
               <div class="mini-bar-group">
-                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:45.0%;background:#28C7FA"></span></div></div>
-                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:10.4%;background:#FF667A"></span></div></div>
+                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:43.9%;background:#28C7FA"></span></div></div>
+                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:10.5%;background:#FF667A"></span></div></div>
               </div>
             </article>
-            
-            <article class="forecast-card">
+
+            <article class="forecast-card" style="--team-color:#E8002D">
               <div class="forecast-topline">
                 <span class="forecast-rank">P6</span>
-                <span class="forecast-ci">Win CI 6.8% to 7.7%</span>
+                <span class="forecast-ci">Win CI 6.9% to 7.8%</span>
               </div>
               <div class="forecast-name">
                 <span class="team-swatch" style="background:#E8002D"></span>
@@ -871,28 +1139,28 @@
               </div>
               <div class="forecast-metrics">
                 <div>
-                  <div class="metric-value">7.2%</div>
+                  <div class="metric-value">7.3%</div>
                   <div class="metric-label">Win</div>
                 </div>
                 <div>
-                  <div class="metric-value">23.5%</div>
+                  <div class="metric-value">23.8%</div>
                   <div class="metric-label">Podium</div>
                 </div>
                 <div>
-                  <div class="metric-value">49.0%</div>
+                  <div class="metric-value">49.8%</div>
                   <div class="metric-label">Top 5</div>
                 </div>
               </div>
               <div class="mini-bar-group">
-                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:49.0%;background:#28C7FA"></span></div></div>
-                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:5.2%;background:#FF667A"></span></div></div>
+                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:49.8%;background:#28C7FA"></span></div></div>
+                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:5.7%;background:#FF667A"></span></div></div>
               </div>
             </article>
-            
-            <article class="forecast-card">
+
+            <article class="forecast-card" style="--team-color:#E8002D">
               <div class="forecast-topline">
                 <span class="forecast-rank">P7</span>
-                <span class="forecast-ci">Win CI 5.1% to 5.9%</span>
+                <span class="forecast-ci">Win CI 5.0% to 5.7%</span>
               </div>
               <div class="forecast-name">
                 <span class="team-swatch" style="background:#E8002D"></span>
@@ -903,60 +1171,28 @@
               </div>
               <div class="forecast-metrics">
                 <div>
-                  <div class="metric-value">5.5%</div>
+                  <div class="metric-value">5.3%</div>
                   <div class="metric-label">Win</div>
                 </div>
                 <div>
-                  <div class="metric-value">18.7%</div>
+                  <div class="metric-value">18.0%</div>
                   <div class="metric-label">Podium</div>
                 </div>
                 <div>
-                  <div class="metric-value">35.0%</div>
+                  <div class="metric-value">32.4%</div>
                   <div class="metric-label">Top 5</div>
                 </div>
               </div>
               <div class="mini-bar-group">
-                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:35.0%;background:#28C7FA"></span></div></div>
-                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:6.1%;background:#FF667A"></span></div></div>
+                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:32.4%;background:#28C7FA"></span></div></div>
+                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:5.7%;background:#FF667A"></span></div></div>
               </div>
             </article>
-            
-            <article class="forecast-card">
+
+            <article class="forecast-card" style="--team-color:#3671C6">
               <div class="forecast-topline">
                 <span class="forecast-rank">P8</span>
                 <span class="forecast-ci">Win CI 3.3% to 3.9%</span>
-              </div>
-              <div class="forecast-name">
-                <span class="team-swatch" style="background:#FF87BC"></span>
-                <div>
-                  <div class="driver-name">Pierre Gasly</div>
-                  <div class="table-meta">Alpine</div>
-                </div>
-              </div>
-              <div class="forecast-metrics">
-                <div>
-                  <div class="metric-value">3.6%</div>
-                  <div class="metric-label">Win</div>
-                </div>
-                <div>
-                  <div class="metric-value">11.8%</div>
-                  <div class="metric-label">Podium</div>
-                </div>
-                <div>
-                  <div class="metric-value">25.4%</div>
-                  <div class="metric-label">Top 5</div>
-                </div>
-              </div>
-              <div class="mini-bar-group">
-                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:25.4%;background:#28C7FA"></span></div></div>
-                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:14.4%;background:#FF667A"></span></div></div>
-              </div>
-            </article>
-            
-            <article class="forecast-card">
-              <div class="forecast-topline">
-                <span class="forecast-rank">P9</span>
-                <span class="forecast-ci">Win CI 3.2% to 3.8%</span>
               </div>
               <div class="forecast-name">
                 <span class="team-swatch" style="background:#3671C6"></span>
@@ -967,7 +1203,7 @@
               </div>
               <div class="forecast-metrics">
                 <div>
-                  <div class="metric-value">3.5%</div>
+                  <div class="metric-value">3.6%</div>
                   <div class="metric-label">Win</div>
                 </div>
                 <div>
@@ -975,20 +1211,52 @@
                   <div class="metric-label">Podium</div>
                 </div>
                 <div>
-                  <div class="metric-value">22.5%</div>
+                  <div class="metric-value">23.1%</div>
                   <div class="metric-label">Top 5</div>
                 </div>
               </div>
               <div class="mini-bar-group">
-                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:22.5%;background:#28C7FA"></span></div></div>
-                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:11.2%;background:#FF667A"></span></div></div>
+                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:23.1%;background:#28C7FA"></span></div></div>
+                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:10.6%;background:#FF667A"></span></div></div>
               </div>
             </article>
-            
-            <article class="forecast-card">
+
+            <article class="forecast-card" style="--team-color:#FF87BC">
+              <div class="forecast-topline">
+                <span class="forecast-rank">P9</span>
+                <span class="forecast-ci">Win CI 3.2% to 3.8%</span>
+              </div>
+              <div class="forecast-name">
+                <span class="team-swatch" style="background:#FF87BC"></span>
+                <div>
+                  <div class="driver-name">Pierre Gasly</div>
+                  <div class="table-meta">Alpine</div>
+                </div>
+              </div>
+              <div class="forecast-metrics">
+                <div>
+                  <div class="metric-value">3.5%</div>
+                  <div class="metric-label">Win</div>
+                </div>
+                <div>
+                  <div class="metric-value">11.6%</div>
+                  <div class="metric-label">Podium</div>
+                </div>
+                <div>
+                  <div class="metric-value">24.6%</div>
+                  <div class="metric-label">Top 5</div>
+                </div>
+              </div>
+              <div class="mini-bar-group">
+                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:24.6%;background:#28C7FA"></span></div></div>
+                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:14.2%;background:#FF667A"></span></div></div>
+              </div>
+            </article>
+
+            <article class="forecast-card" style="--team-color:#9B0000">
               <div class="forecast-topline">
                 <span class="forecast-rank">P10</span>
-                <span class="forecast-ci">Win CI 2.8% to 3.4%</span>
+                <span class="forecast-ci">Win CI 3.2% to 3.8%</span>
               </div>
               <div class="forecast-name">
                 <span class="team-swatch" style="background:#9B0000"></span>
@@ -999,109 +1267,107 @@
               </div>
               <div class="forecast-metrics">
                 <div>
-                  <div class="metric-value">3.1%</div>
+                  <div class="metric-value">3.5%</div>
                   <div class="metric-label">Win</div>
                 </div>
                 <div>
-                  <div class="metric-value">10.1%</div>
+                  <div class="metric-value">11.1%</div>
                   <div class="metric-label">Podium</div>
                 </div>
                 <div>
-                  <div class="metric-value">5.3%</div>
+                  <div class="metric-value">7.2%</div>
                   <div class="metric-label">Top 5</div>
                 </div>
               </div>
               <div class="mini-bar-group">
-                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:5.3%;background:#28C7FA"></span></div></div>
-                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:17.2%;background:#FF667A"></span></div></div>
+                <div class="mini-bar-row"><span>Top 5</span><div class="prob-bar slim"><span style="width:7.2%;background:#28C7FA"></span></div></div>
+                <div class="mini-bar-row"><span>DNF</span><div class="prob-bar slim"><span style="width:17.9%;background:#FF667A"></span></div></div>
               </div>
             </article>
-            
-        </div>
-      </article>
-    </div>
-  </section>
+            </div>
+      </div>
+    </section>
 
-  <section class="section">
-    <div class="wrap grid-3">
-      <article class="card">
-        <div class="slabel">Signal density</div>
-        <div class="ctitle">STRONGEST FEATURE SIGNALS</div>
-        <p class="copy">These are the highest absolute correlations against finishing position in the saved feature audit. They are not causal proof or model importance, but they do show where the structure is currently strongest.</p>
-        <div class="divider"></div>
-        
-            <div class="feature-row">
-              <div class="feature-head">
-                <span>ExpectedPositionsGained</span>
-                <span>0.620</span>
-              </div>
-              <div class="prob-bar slim"><span style="width:100.0%;background:#FF6B35"></span></div>
-            </div>
-            
-            <div class="feature-row">
-              <div class="feature-head">
-                <span>GridPositionNorm</span>
-                <span>0.590</span>
-              </div>
-              <div class="prob-bar slim"><span style="width:95.1%;background:#28C7FA"></span></div>
-            </div>
-            
+    <section class="section">
+      <div class="wrap analysis-grid">
+        <article class="board">
+          <div class="slabel">Signal audit</div>
+          <div class="ctitle">WHAT MOVES THE ORDER</div>
+          <p class="copy">Absolute correlation with finish position from the saved feature matrix. These are structural signals visible in the current artifacts, not claims of direct causality.</p>
+          <div class="divider"></div>
+
             <div class="feature-row">
               <div class="feature-head">
                 <span>GridPosition</span>
                 <span>0.590</span>
               </div>
-              <div class="prob-bar slim"><span style="width:95.1%;background:#FFD166"></span></div>
+              <div class="prob-bar slim"><span style="width:100.0%;background:#FF6B35"></span></div>
             </div>
-            
+
+            <div class="feature-row">
+              <div class="feature-head">
+                <span>GridPositionNorm</span>
+                <span>0.590</span>
+              </div>
+              <div class="prob-bar slim"><span style="width:100.0%;background:#28C7FA"></span></div>
+            </div>
+
+            <div class="feature-row">
+              <div class="feature-head">
+                <span>ExpectedPositionsGained</span>
+                <span>0.590</span>
+              </div>
+              <div class="prob-bar slim"><span style="width:100.0%;background:#FFD166"></span></div>
+            </div>
+
             <div class="feature-row">
               <div class="feature-head">
                 <span>RollingAvgGridPos_5</span>
                 <span>0.563</span>
               </div>
-              <div class="prob-bar slim"><span style="width:90.9%;background:#59F8B2"></span></div>
+              <div class="prob-bar slim"><span style="width:95.5%;background:#59F8B2"></span></div>
             </div>
-            
+
             <div class="feature-row">
               <div class="feature-head">
                 <span>RollingAvgFinish_5</span>
                 <span>0.546</span>
               </div>
-              <div class="prob-bar slim"><span style="width:88.1%;background:#FF8A47"></span></div>
+              <div class="prob-bar slim"><span style="width:92.6%;background:#FF8A47"></span></div>
             </div>
-            
+
             <div class="feature-row">
               <div class="feature-head">
                 <span>GapToPole_s</span>
                 <span>0.521</span>
               </div>
-              <div class="prob-bar slim"><span style="width:84.1%;background:#66D9FF"></span></div>
+              <div class="prob-bar slim"><span style="width:88.4%;background:#66D9FF"></span></div>
             </div>
-            
+
+            <div class="feature-row">
+              <div class="feature-head">
+                <span>TeamQualiGap_s</span>
+                <span>0.500</span>
+              </div>
+              <div class="prob-bar slim"><span style="width:84.9%;background:#FFE28A"></span></div>
+            </div>
+
             <div class="feature-row">
               <div class="feature-head">
                 <span>ConstructorRiskIndex</span>
-                <span>0.379</span>
+                <span>0.353</span>
               </div>
-              <div class="prob-bar slim"><span style="width:61.1%;background:#FFE28A"></span></div>
+              <div class="prob-bar slim"><span style="width:59.9%;background:#7FF8C1"></span></div>
             </div>
-            
-            <div class="feature-row">
-              <div class="feature-head">
-                <span>DNFRate_rolling</span>
-                <span>0.258</span>
-              </div>
-              <div class="prob-bar slim"><span style="width:41.7%;background:#7FF8C1"></span></div>
-            </div>
-            
-      </article>
 
-      <article class="card">
-        <div class="slabel">Validation discipline</div>
-        <div class="ctitle">HONEST PERFORMANCE</div>
-        <p class="copy">Walk-forward validation keeps the model under the same information constraint it faces in production. The current picture is nuanced: the ensemble is best on ranking structure, but the qualifying baseline still wins the simpler winner-pick contest.</p>
-        <div class="divider"></div>
-        
+        </article>
+
+        <article class="board">
+          <div class="slabel">Validation</div>
+          <div class="ctitle">HONEST BACKTEST</div>
+          <p class="copy">Walk-forward only: train on the past and score the future. The ensemble leads on ranking quality, while the qualifying baseline still steals some cleaner single-winner calls.</p>
+          <div class="divider"></div>
+
             <article class="model-card highlight">
               <div class="subsection-label">Ensemble stack</div>
               <div class="model-grid">
@@ -1124,7 +1390,7 @@
               </div>
               <div class="range-note">92 walk-forward races | podium overlap 1.82</div>
             </article>
-            
+
             <article class="model-card ">
               <div class="subsection-label">Qualifying baseline</div>
               <div class="model-grid">
@@ -1147,7 +1413,7 @@
               </div>
               <div class="range-note">92 walk-forward races | podium overlap 1.91</div>
             </article>
-            
+
             <article class="model-card ">
               <div class="subsection-label">Season-points baseline</div>
               <div class="model-grid">
@@ -1170,85 +1436,84 @@
               </div>
               <div class="range-note">92 walk-forward races | podium overlap 1.75</div>
             </article>
-            
-      </article>
 
-      <article class="card">
-        <div class="slabel">Model watchlist</div>
-        <div class="ctitle">KNOWN GAPS</div>
-        <p class="copy">Portfolio-grade analytics should show where the system is strong and where it still has technical debt. These are the three most important issues surfaced during the repo audit.</p>
-        <div class="divider"></div>
-        
+        </article>
+
+        <article class="board board-alert">
+          <div class="slabel">Known gaps</div>
+          <div class="ctitle">MODEL WATCHLIST</div>
+          <p class="copy">The page is intentionally transparent about what still needs fixing. That transparency matters when this is shown to operators, recruiters, or leadership teams instead of staying in a notebook.</p>
+          <div class="divider"></div>
+
             <div class="watch-item">
               <div class="subsection-label">Circuit DNA join mismatch</div>
               <p>Historical race names and circuit archetype labels do not currently line up cleanly, so circuit-specific features are muted in the saved matrix.</p>
             </div>
-            
+
             <div class="watch-item">
               <div class="subsection-label">Wet-weather signal is flat</div>
               <p>Saved feature artifacts currently show no live variation in wet-race fields, which means rain sensitivity is materially under-modelled.</p>
             </div>
-            
+
             <div class="watch-item">
               <div class="subsection-label">Constructor priors need year awareness</div>
               <p>Historical training rows are still leaning on 2025-style constructor anchors instead of season-specific constructor state, which compresses regime-change learning.</p>
             </div>
-            
-      </article>
-    </div>
-  </section>
 
-  <section class="story">
-    <div class="wrap story-grid">
-      <div class="story-copy">
-        <div class="slabel">Executive narrative</div>
-        <div class="ctitle">HOW TO READ THIS SYSTEM</div>
-        <p><strong>Kimi Antonelli</strong> leading the points while <strong>George Russell</strong> owns the title probability is the exact kind of divergence this project is built to surface. A boardroom audience usually sees only the table; the analytics layer shows what is likely to persist, what is noise, and where current state still understates future control.</p>
-        <p><strong>Mercedes</strong> is the early 2026 operating story. The team is up <strong>11.7 points per race</strong> versus its 2025 baseline, leads the live constructors table by <strong>46 points</strong>, and owns a forecasted WCC lock. At the same time, the next-race snapshot shows unusually dispersed winner probabilities, which is exactly why uncertainty needs to be presented explicitly.</p>
-        <p>The validation result is also intentionally honest. The <strong>ensemble stack</strong> is stronger than the simple baselines on full-order ranking quality at <strong>0.627</strong> mean Spearman, but it is still behind the qualifying baseline on outright winner hit rate at <strong>44.6%</strong> versus <strong>55.4%</strong>. That honesty makes the portfolio stronger, not weaker.</p>
+        </article>
       </div>
-      <div>
-        <div class="slabel">Method stack</div>
-        <div class="ctitle">ARCHITECTURE</div>
+    </section>
+
+    <section class="story-band">
+      <div class="wrap story-grid">
+        <div class="story-copy">
+          <div class="slabel slabel-invert">Method note</div>
+          <div class="story-title">WHY THIS LOOKS LIKE A RACE BRIEFING, NOT A SCOREBOARD</div>
+          <p><strong>Standings are descriptive.</strong> Forecasts are decision tools. That is why this page deliberately puts the live table next to the WDC probability ladder instead of pretending current points are the same thing as future control.</p>
+          <p><strong>The ranking model is the anchor.</strong> Grouped XGBoost learns the relative order inside each grand prix, Bradley-Terry adds head-to-head driver signal, and Monte Carlo converts point estimates into title odds, confidence bands, and scenario ranges.</p>
+          <p><strong>Validation stays honest.</strong> Walk-forward evaluation prevents future leakage, and the watchlist remains visible so the dashboard feels executive-grade and technically self-aware at the same time.</p>
+        </div>
         <div class="method-grid">
-          
         <div class="method-card">
           <div class="subsection-label">Grouped race ranker</div>
           <p>XGBoost learns the order inside each grand prix rather than just a binary win signal, using 3,458 driver-race rows from 2018 to 2025.</p>
         </div>
-        
+
         <div class="method-card">
           <div class="subsection-label">Pairwise driver strength</div>
           <p>Bradley-Terry estimates head-to-head driver advantage, giving the stack a driver-vs-driver layer that pure table features usually miss.</p>
         </div>
-        
+
         <div class="method-card">
           <div class="subsection-label">Monte Carlo season engine</div>
           <p>10,000 simulations translate point estimates into title odds, podium ranges, and season-end distributions rather than false certainty.</p>
         </div>
-        
+
         <div class="method-card">
           <div class="subsection-label">Weighted ensemble</div>
           <p>Final forecast blend is XGBoost 50%, Bradley-Terry 30%, Monte Carlo 20%.</p>
         </div>
-        
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <footer class="footer">
-    <div class="wrap footer-grid">
-      <div>
-        <strong>F1 PREDICTOR | PORTFOLIO DASHBOARD</strong><br/>
-        Generated April 7, 2026 from live project artifacts<br/>
-        Historical span 2018 to 2025 | 3,458 training rows
+    <footer class="footer">
+      <div class="wrap footer-grid">
+        <div>
+          <strong>PIT WALL DOSSIER</strong><br/>
+          Data stack: Jolpica + FastF1 + live 2026 parquet layer<br/>
+          Forecast stack: XGBoost ranking + Bradley-Terry + Monte Carlo blend<br/>
+          Snapshot generated May 13, 2026
+        </div>
+        <div class="footer-right">
+          <div class="footer-note">Portfolio design choices</div>
+          Differentiate live standings from forward probabilities<br/>
+          Show executive narrative and technical rigor on one page<br/>
+          Keep validation leakage-free and visually legible<br/>
+          Surface model gaps instead of hiding them
+        </div>
       </div>
-      <div class="footer-note">
-        Ensemble weights | XGBoost 50% | Bradley-Terry 30% | Monte Carlo 20%<br/>
-        Walk-forward races | 92 | Winner accuracy 44.6% | Mean MAE 3.79 to 3.53 across benchmarks
-      </div>
-    </div>
-  </footer>
+    </footer>
+  </div>
 </body>
 </html>

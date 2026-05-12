@@ -1,8 +1,8 @@
 {
-  "race_name": "Bahrain",
+  "race_name": "Miami",
   "year": 2026,
   "race_number": 4,
-  "generated_at": "2026-04-07T17:12:04",
-  "latest_csv": "C:\\Users\\soura\\Documents\\f1-2026-predictor\\results\\latest_race_prediction.csv",
-  "archive_csv": "C:\\Users\\soura\\Documents\\f1-2026-predictor\\results\\predictions\\prediction_2026_r4_bahrain_20260407_171204.csv"
+  "generated_at": "2026-05-13T01:30:04",
+  "latest_csv": "results/latest_race_prediction.csv",
+  "archive_csv": "results/predictions/prediction_2026_r4_miami_20260513_013004.csv"
 }
