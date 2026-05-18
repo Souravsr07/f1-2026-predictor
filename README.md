@@ -180,13 +180,35 @@ Detailed remote/push steps are in [docs/GITHUB_SETUP.md](docs/GITHUB_SETUP.md).
 ## Latest forecast
 
 <!-- PREDICTION_TABLE_START -->
-_Run `python predict.py --race <RaceName> --year 2026 --round <Round>` to refresh this section._
+### Latest forecast: Miami (Round 4)
+_Updated: 2026-05-18 06:49:20_
+
+| Pos | Driver | Team | Win% | Podium% | Top 5% | DNF% |
+|-----|--------|------|------|----------|--------|------|
+| 1 | **ANT** | Mercedes | 11.2% | 19.6% | 75.1% | 5.2% |
+| 2 | **RUS** | Mercedes | 9.1% | 23.4% | 58.9% | 5.4% |
+| 3 | **PIA** | McLaren | 8.2% | 25.8% | 50.6% | 10.4% |
+| 4 | **VER** | Red Bull | 8.1% | 24.0% | 14.5% | 10.9% |
+| 5 | **NOR** | McLaren | 7.8% | 23.5% | 44.7% | 10.5% |
+| 6 | **LEC** | Ferrari | 7.3% | 23.7% | 49.1% | 5.7% |
+| 7 | **HAM** | Ferrari | 5.4% | 18.1% | 32.5% | 5.7% |
+| 8 | **GAS** | Alpine | 3.6% | 11.9% | 25.4% | 14.2% |
+| 9 | **HAD** | Red Bull | 3.5% | 11.9% | 23.0% | 10.6% |
+| 10 | **PER** | Cadillac | 3.2% | 10.2% | 6.8% | 17.9% |
+
+Full dashboard: [dashboard/f1_2026_portfolio_dashboard.html](dashboard/f1_2026_portfolio_dashboard.html)
 <!-- PREDICTION_TABLE_END -->
 
 ## Validation summary
 
 <!-- ACCURACY_TABLE_START -->
-_Run `python scripts/model_diagnostics.py --eval-years 2022 2023 2024 2025 --mc-sims 300` to refresh this section._
+### Validation benchmark
+
+| Model | Win accuracy | Spearman rho | MAE positions | Races |
+|-------|--------------|--------------|---------------|-------|
+| Ensemble | 44.6% | 0.627 | 3.57 | 92 |
+| Qualifying baseline | 55.4% | 0.613 | 3.53 | 92 |
+| Season-points baseline | 50.0% | 0.598 | 3.79 | 92 |
 <!-- ACCURACY_TABLE_END -->
 
 ## Known gaps
