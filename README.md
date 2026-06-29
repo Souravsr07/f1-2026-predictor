@@ -181,7 +181,7 @@ Detailed remote/push steps are in [docs/GITHUB_SETUP.md](docs/GITHUB_SETUP.md).
 
 <!-- PREDICTION_TABLE_START -->
 ### Latest forecast: Miami (Round 4)
-_Updated: 2026-06-22 08:52:32_
+_Updated: 2026-06-29 07:23:40_
 
 | Pos | Driver | Team | Win% | Podium% | Top 5% | DNF% |
 |-----|--------|------|------|----------|--------|------|
