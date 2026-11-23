@@ -181,20 +181,20 @@ Detailed remote/push steps are in [docs/GITHUB_SETUP.md](docs/GITHUB_SETUP.md).
 
 <!-- PREDICTION_TABLE_START -->
 ### Latest forecast: Miami (Round 4)
-_Updated: 2026-11-16 10:24:54_
+_Updated: 2026-11-23 11:36:32_
 
 | Pos | Driver | Team | Win% | Podium% | Top 5% | DNF% |
 |-----|--------|------|------|----------|--------|------|
-| 1 | **ANT** | Mercedes | 11.2% | 19.6% | 75.1% | 5.2% |
-| 2 | **RUS** | Mercedes | 9.1% | 23.4% | 58.9% | 5.4% |
-| 3 | **PIA** | McLaren | 8.2% | 25.8% | 50.6% | 10.4% |
-| 4 | **VER** | Red Bull | 8.1% | 24.0% | 14.5% | 10.9% |
-| 5 | **NOR** | McLaren | 7.8% | 23.5% | 44.7% | 10.5% |
-| 6 | **LEC** | Ferrari | 7.3% | 23.7% | 49.1% | 5.7% |
-| 7 | **HAM** | Ferrari | 5.4% | 18.1% | 32.5% | 5.7% |
-| 8 | **GAS** | Alpine | 3.6% | 11.9% | 25.4% | 14.2% |
-| 9 | **HAD** | Red Bull | 3.5% | 11.9% | 23.0% | 10.6% |
-| 10 | **PER** | Cadillac | 3.2% | 10.2% | 6.8% | 17.9% |
+| 1 | **ANT** | Mercedes | 11.3% | 19.7% | 75.6% | 5.2% |
+| 2 | **RUS** | Mercedes | 8.6% | 22.4% | 55.8% | 5.4% |
+| 3 | **PIA** | McLaren | 8.3% | 26.0% | 51.2% | 10.4% |
+| 4 | **VER** | Red Bull | 8.2% | 24.0% | 14.4% | 10.9% |
+| 5 | **NOR** | McLaren | 7.7% | 23.1% | 43.9% | 10.5% |
+| 6 | **LEC** | Ferrari | 7.3% | 23.8% | 49.8% | 5.7% |
+| 7 | **HAM** | Ferrari | 5.3% | 18.0% | 32.4% | 5.7% |
+| 8 | **HAD** | Red Bull | 3.6% | 11.9% | 23.1% | 10.6% |
+| 9 | **GAS** | Alpine | 3.5% | 11.6% | 24.6% | 14.2% |
+| 10 | **PER** | Cadillac | 3.5% | 11.1% | 7.2% | 17.9% |
 
 Full dashboard: [dashboard/f1_2026_portfolio_dashboard.html](dashboard/f1_2026_portfolio_dashboard.html)
 <!-- PREDICTION_TABLE_END -->
